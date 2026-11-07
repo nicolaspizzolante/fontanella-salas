@@ -1,0 +1,79 @@
+// Modelo de datos de la v1.
+// Restricciones que Prisma no puede expresar (exclusion constraint y CHECKs)
+// viven en SQL dentro de la migración inicial: ver prisma/migrations.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum EstadoReserva {
+  CONFIRMADA
+  CANCELADA
+}
+
+enum OrigenCancelacion {
+  EMPRESA
+  ADMIN
+}
+
+/// Instalación física. Permite crecer a varias sedes sin cambiar el modelo.
+model Sede {
+  id        String   @id @default(uuid()) @db.Uuid
+  nombre    String   @unique
+  direccion String?
+  creadaEn  DateTime @default(now()) @map("creada_en") @db.Timestamptz(3)
+  salas     Sala[]
+
+  @@map("sedes")
+}
+
+model Sala {
+  id        String    @id @default(uuid()) @db.Uuid
+  sedeId    String    @map("sede_id") @db.Uuid
+  nombre    String
+  capacidad Int
+  activa    Boolean   @default(true)
+  creadaEn  DateTime  @default(now()) @map("creada_en") @db.Timestamptz(3)
+  sede      Sede      @relation(fields: [sedeId], references: [id])
+  reservas  Reserva[]
+
+  @@unique([sedeId, nombre])
+  @@map("salas")
+}
+
+/// Empresa cliente (tenant). Cada reserva pertenece a una sola empresa.
+model Empresa {
+  id       String    @id @default(uuid()) @db.Uuid
+  nombre   String    @unique
+  creadaEn DateTime  @default(now()) @map("creada_en") @db.Timestamptz(3)
+  reservas Reserva[]
+
+  @@map("empresas")
+}
+
+/// Intervalo semiabierto [inicio, fin), guardado en UTC.
+/// Las reservas no se borran: se cancelan (estado + fecha) para conservar historial y métricas.
+model Reserva {
+  id                String             @id @default(uuid()) @db.Uuid
+  salaId            String             @map("sala_id") @db.Uuid
+  empresaId         String             @map("empresa_id") @db.Uuid
+  inicio            DateTime           @db.Timestamptz(3)
+  fin               DateTime           @db.Timestamptz(3)
+  asistentes        Int
+  motivo            String?
+  estado            EstadoReserva      @default(CONFIRMADA)
+  creadaEn          DateTime           @default(now()) @map("creada_en") @db.Timestamptz(3)
+  canceladaEn       DateTime?          @map("cancelada_en") @db.Timestamptz(3)
+  origenCancelacion OrigenCancelacion? @map("origen_cancelacion")
+  sala              Sala               @relation(fields: [salaId], references: [id])
+  empresa           Empresa            @relation(fields: [empresaId], references: [id])
+
+  @@index([empresaId, inicio])
+  @@index([salaId, inicio])
+  @@map("reservas")
+}
