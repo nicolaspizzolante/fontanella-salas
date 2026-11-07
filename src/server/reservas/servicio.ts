@@ -4,11 +4,7 @@
  */
 import { prisma } from "../db";
 import { REGLAS } from "../config/reglas";
-import {
-  ErrorConflicto,
-  ErrorNoEncontrado,
-  ErrorReglaNegocio,
-} from "../errores";
+import { ErrorConflicto, ErrorDeDominio, ErrorNoEncontrado, ErrorReglaNegocio } from "../errores";
 import { exigirEmpresa, type Actor } from "../identidad";
 import type { Prisma } from "@/generated/prisma/client";
 import type { DatosCrearReserva, FiltrosReservas } from "./esquemas";
@@ -55,17 +51,52 @@ function alcanceDe(actor: Actor): Prisma.ReservaWhereInput {
   return actor.tipo === "empresa" ? { empresaId: actor.empresaId } : {};
 }
 
-/** Detecta la violación de la exclusion constraint, venga como venga envuelta por Prisma/pg. */
-function esViolacionDeSuperposicion(error: unknown): boolean {
+/** Busca un patrón en el error y en toda su cadena de causas (Prisma → adapter → pg). */
+function errorContiene(error: unknown, patrones: string[]): boolean {
   const vistos = new Set<unknown>();
   let actual: unknown = error;
   while (actual && typeof actual === "object" && !vistos.has(actual)) {
     vistos.add(actual);
     const texto = JSON.stringify(actual, Object.getOwnPropertyNames(actual)) ?? "";
-    if (texto.includes("reservas_sin_superposicion") || texto.includes("23P01")) return true;
+    if (patrones.some((patron) => texto.includes(patron))) return true;
     actual = (actual as { cause?: unknown }).cause;
   }
   return false;
+}
+
+/** Violación de la exclusion constraint (SQLSTATE 23P01): la sala ya está ocupada. */
+const esViolacionDeSuperposicion = (error: unknown) =>
+  errorContiene(error, ["reservas_sin_superposicion", "23P01"]);
+
+/**
+ * Conflicto transitorio entre transacciones concurrentes. Con exclusion constraints,
+ * varias inserciones parcialmente superpuestas pueden esperarse mutuamente y Postgres
+ * aborta una por deadlock (40P01), que Prisma informa como P2034. No es un error de
+ * negocio: reintentar resuelve el empate y entonces la constraint da la respuesta real.
+ */
+const esConflictoTransitorio = (error: unknown) =>
+  (error as { code?: string })?.code === "P2034" ||
+  errorContiene(error, ["40P01", "40001", "TransactionWriteConflict"]);
+
+const MAX_INTENTOS = 5;
+
+async function conReintentos<T>(operacion: () => Promise<T>): Promise<T> {
+  for (let intento = 1; ; intento++) {
+    try {
+      return await operacion();
+    } catch (error) {
+      if (!esConflictoTransitorio(error)) throw error;
+      if (intento >= MAX_INTENTOS) {
+        throw new ErrorDeDominio(
+          503,
+          "REINTENTAR",
+          "Hay mucha demanda sobre esa sala en este momento. Intentá de nuevo en unos segundos.",
+        );
+      }
+      // Espera breve con azar (jitter) para que los competidores no vuelvan a chocar a la vez.
+      await new Promise((resolver) => setTimeout(resolver, 15 * intento + Math.random() * 25));
+    }
+  }
 }
 
 export async function crearReserva(actor: Actor, datos: DatosCrearReserva, ahora = new Date()) {
@@ -88,20 +119,32 @@ export async function crearReserva(actor: Actor, datos: DatosCrearReserva, ahora
   }
 
   try {
-    // Sin "consultar y después insertar": la base rechaza atómicamente la superposición,
-    // así que dos pedidos simultáneos nunca pueden confirmarse los dos.
-    const reserva = await prisma.reserva.create({
-      data: {
-        salaId: sala.id,
-        empresaId: actor.empresaId,
-        inicio: datos.inicio,
-        fin: datos.fin,
-        asistentes: datos.asistentes,
-        motivo: datos.motivo || null,
-      },
-      select: seleccionReserva,
-    });
-    return aDto(reserva);
+    // Dos capas contra reservas simultáneas:
+    //  1. Lock por sala (advisory lock de Postgres, se libera solo al terminar la
+    //     transacción): los pedidos para la MISMA sala se insertan de a uno y no
+    //     generan deadlocks entre sí; salas distintas siguen en paralelo.
+    //  2. La exclusion constraint: garantía final, aunque alguien escriba en la
+    //     base sin pasar por este código.
+    const { id } = await conReintentos(() =>
+      prisma.$transaction(
+        async (tx) => {
+          await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${sala.id}, 0))`;
+          return tx.reserva.create({
+            data: {
+              salaId: sala.id,
+              empresaId: actor.empresaId,
+              inicio: datos.inicio,
+              fin: datos.fin,
+              asistentes: datos.asistentes,
+              motivo: datos.motivo || null,
+            },
+            select: { id: true },
+          });
+        },
+        { maxWait: 10_000, timeout: 10_000 },
+      ),
+    );
+    return aDto(await prisma.reserva.findUniqueOrThrow({ where: { id }, select: seleccionReserva }));
   } catch (error) {
     if (!esViolacionDeSuperposicion(error)) throw error;
 
