@@ -2,7 +2,7 @@ import { fileURLToPath } from "node:url";
 import { config as cargarEnv } from "dotenv";
 import { defineConfig } from "vitest/config";
 
-cargarEnv();
+cargarEnv({ quiet: true });
 
 const urlTest = process.env.DATABASE_URL_TEST;
 if (!urlTest) throw new Error("Falta DATABASE_URL_TEST (ver .env.example)");
@@ -16,8 +16,11 @@ export default defineConfig({
     // Los tests de integración usan una base separada, nunca la de desarrollo.
     env: { DATABASE_URL: urlTest, TZ: "UTC" },
     globalSetup: ["./tests/helpers/global-setup.ts"],
+    setupFiles: ["./tests/helpers/setup.ts"],
     // Comparten una única base: se ejecutan de a un archivo para no pisarse.
     fileParallelism: false,
+    // Los tests de concurrencia pueden esperar la detección de deadlocks de Postgres (~1 s).
+    testTimeout: 30_000,
     include: ["tests/**/*.test.ts"],
   },
 });
