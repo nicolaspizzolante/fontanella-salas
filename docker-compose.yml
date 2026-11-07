@@ -1,3 +1,5 @@
+# Levanta todo con: docker compose up --build   →  http://localhost:3000
+# Para desarrollar: docker compose up -d db  +  npm run dev
 services:
   db:
     image: postgres:17-alpine
@@ -17,6 +19,16 @@ services:
       interval: 2s
       timeout: 3s
       retries: 30
+
+  app:
+    build: .
+    environment:
+      DATABASE_URL: postgresql://salas:salas@db:5432/salas
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
   db-data:

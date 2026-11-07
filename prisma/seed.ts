@@ -7,6 +7,8 @@
  *  - una empresa cancela mucho y tarde; otra dejó de reservar hace más de 30 días.
  *
  * Es determinístico (PRNG con semilla fija) e idempotente: borra y vuelve a cargar.
+ * Con `--si-vacia` no hace nada si ya hay datos: así el arranque con Docker no
+ * pisa las reservas creadas por los usuarios.
  */
 import "dotenv/config";
 import { crearPrismaClient } from "../src/server/db";
@@ -202,6 +204,11 @@ function generarReservas(
 }
 
 async function main() {
+  if (process.argv.includes("--si-vacia") && (await prisma.empresa.count()) > 0) {
+    console.log("Seed omitido: la base ya tiene datos.");
+    return;
+  }
+
   await prisma.$transaction([
     prisma.reserva.deleteMany(),
     prisma.sala.deleteMany(),
