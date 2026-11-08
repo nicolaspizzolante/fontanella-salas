@@ -1,8 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorApi, pedirApi, type Disponibilidad, type Reserva } from "../api";
 import { Aviso, type AvisoEstado } from "../componentes/aviso";
+import { SelectorFecha } from "../componentes/selector-fecha";
 import { useApp } from "../contexto";
 import { capitalizar, diaSemana, fechaLarga, hoy, instanteIso, minutosLocales, sumarDias } from "../formato";
 import { LineaSala, type Seleccion } from "./linea-sala";
@@ -128,12 +133,12 @@ export function VistaDisponibilidad() {
       <div className="mt-8 grid items-start gap-x-10 gap-y-8 lg:grid-cols-[minmax(0,1fr)_19rem]">
         <section aria-label={`Salas el ${fechaLarga(fecha)}`} className="canto min-w-0">
           {errorCarga ? (
-            <div className="py-6">
-              <p role="alert" className="text-error">{errorCarga}</p>
-              <button type="button" onClick={() => cargar()} className="mt-3 text-sm font-medium underline underline-offset-4">
+            <Alert variant="destructive" className="my-4 border-transparent bg-error-suelo">
+              <AlertDescription className="text-current">{errorCarga}</AlertDescription>
+              <Button variant="link" size="sm" onClick={() => cargar()} className="mt-1 h-auto justify-start p-0 text-current">
                 Reintentar
-              </button>
-            </div>
+              </Button>
+            </Alert>
           ) : (
             <div className="overflow-x-auto">
               <div className="min-w-[660px]">
@@ -186,50 +191,21 @@ export function VistaDisponibilidad() {
 }
 
 function NavegadorFecha({ fecha, onCambiar }: { fecha: string; onCambiar: (f: string) => void }) {
-  const boton =
-    "grid h-9 w-9 place-items-center rounded-md border border-borde bg-superficie text-tinta-2 transition-colors duration-150 hover:border-borde-fuerte hover:text-tinta";
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <button type="button" className={boton} onClick={() => onCambiar(proximoDiaHabil(fecha, -1))} aria-label="Día hábil anterior">
-        <Flecha direccion="izquierda" />
-      </button>
-      <label className="relative">
-        <span className="sr-only">Fecha</span>
-        <input
-          type="date"
-          value={fecha}
-          onChange={(e) => e.target.value && onCambiar(e.target.value)}
-          className="h-9 rounded-md border border-borde bg-superficie px-3 font-medium text-tinta hover:border-borde-fuerte"
-        />
-      </label>
-      <button type="button" className={boton} onClick={() => onCambiar(proximoDiaHabil(fecha, 1))} aria-label="Día hábil siguiente">
-        <Flecha direccion="derecha" />
-      </button>
-      <span className="ml-1 min-w-[12rem] text-[15px] font-medium text-tinta">{capitalizar(fechaLarga(fecha))}</span>
+      <Button variant="outline" size="icon-lg" onClick={() => onCambiar(proximoDiaHabil(fecha, -1))} aria-label="Día hábil anterior">
+        <ChevronLeftIcon />
+      </Button>
+      <SelectorFecha fecha={fecha} onCambiar={onCambiar} soloHabiles />
+      <Button variant="outline" size="icon-lg" onClick={() => onCambiar(proximoDiaHabil(fecha, 1))} aria-label="Día hábil siguiente">
+        <ChevronRightIcon />
+      </Button>
       {fecha !== hoy() && (
-        <button
-          type="button"
-          onClick={() => onCambiar(hoy())}
-          className="text-sm font-medium text-tinta-2 underline-offset-4 hover:text-tinta hover:underline"
-        >
+        <Button variant="link" onClick={() => onCambiar(hoy())} className="text-tinta-2">
           Ir a hoy
-        </button>
+        </Button>
       )}
     </div>
-  );
-}
-
-export function Flecha({ direccion }: { direccion: "izquierda" | "derecha" }) {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <path
-        d={direccion === "izquierda" ? "M10 3 5 8l5 5" : "M6 3l5 5-5 5"}
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
   );
 }
 
@@ -255,8 +231,8 @@ function EscalaHoras() {
 function FilaEsqueleto() {
   return (
     <div className="grid h-[88px] items-center border-b border-borde" style={{ gridTemplateColumns: `${ANCHO_ETIQUETA} 1fr` }}>
-      <div className="h-4 w-32 animate-pulse rounded bg-ocupado-suelo" />
-      <div className="ml-3 mr-5 h-1 animate-pulse rounded bg-ocupado-suelo" />
+      <Skeleton className="h-5 w-40" />
+      <Skeleton className="ml-3 mr-5 h-1" />
     </div>
   );
 }

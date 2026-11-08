@@ -2,9 +2,18 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Metricas } from "@/server/metricas/calculo";
 import { ErrorApi, pedirApi } from "../api";
 import { NombreSala } from "../componentes/insignia-sala";
+import { SelectorRangoFechas } from "../componentes/selector-fecha";
 import { useApp } from "../contexto";
 import { capitalizar, fechaCorta, horasTexto, hoy, porcentaje, sumarDias } from "../formato";
 
@@ -56,9 +65,9 @@ export function VistaMetricas() {
         <h1 className="titulo-cartel text-[40px]">Métricas de uso</h1>
         <p className="mt-3 max-w-[65ch] text-tinta-2">
           Las métricas de uso son solo para la administración del edificio. Desde{" "}
-          <Link href="/disponibilidad" className="font-medium text-tinta underline underline-offset-4">
-            Disponibilidad
-          </Link>{" "}
+          <Button asChild variant="link" className="h-auto p-0 text-base text-tinta">
+            <Link href="/disponibilidad">Disponibilidad</Link>
+          </Button>{" "}
           podés reservar una sala.
         </p>
       </div>
@@ -86,12 +95,12 @@ export function VistaMetricas() {
       </div>
 
       {error && (
-        <div role="alert" className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-md bg-error-suelo px-4 py-3 text-[15px] text-error">
-          <span>{capitalizar(error)}</span>
-          <button type="button" onClick={cargar} className="text-sm font-medium underline underline-offset-4">
+        <Alert variant="destructive" className="mt-5 border-transparent bg-error-suelo px-4 py-3">
+          <AlertDescription className="text-[15px] text-current">{capitalizar(error)}</AlertDescription>
+          <Button variant="link" size="sm" onClick={cargar} className="mt-1 h-auto justify-start p-0 text-current">
             Reintentar
-          </button>
-        </div>
+          </Button>
+        </Alert>
       )}
 
       {!datos ? (
@@ -127,46 +136,30 @@ function SelectorRango({
   presetActivo: string | undefined;
   onCambiar: (r: { desde: string; hasta: string }) => void;
 }) {
-  const campo = "h-9 rounded-md border border-borde bg-superficie px-2.5 font-medium text-tinta hover:border-borde-fuerte";
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <div role="group" aria-label="Períodos rápidos" className="inline-flex rounded-md border border-borde bg-superficie p-1">
+      <ToggleGroup
+        type="single"
+        variant="outline"
+        spacing={0}
+        aria-label="Períodos rápidos"
+        value={presetActivo ?? ""}
+        onValueChange={(id) => {
+          const p = PRESETS.find((x) => x.id === id);
+          if (p) onCambiar({ desde: sumarDias(hoy(), -(p.dias - 1)), hasta: hoy() });
+        }}
+      >
         {PRESETS.map((p) => (
-          <button
+          <ToggleGroupItem
             key={p.id}
-            type="button"
-            aria-pressed={presetActivo === p.id}
-            onClick={() => onCambiar({ desde: sumarDias(hoy(), -(p.dias - 1)), hasta: hoy() })}
-            className={`rounded px-3 py-1 text-sm font-medium transition-colors duration-150 ${
-              presetActivo === p.id ? "bg-banda text-banda-tinta" : "text-tinta-2 hover:text-tinta"
-            }`}
+            value={p.id}
+            className="h-10 px-3.5 text-sm data-[state=on]:bg-banda data-[state=on]:text-banda-tinta"
           >
             {p.etiqueta}
-          </button>
+          </ToggleGroupItem>
         ))}
-      </div>
-      <div className="flex flex-wrap items-center gap-2 text-sm text-tinta-2">
-        <label className="flex items-center gap-2">
-          Desde
-          <input
-            type="date"
-            value={rango.desde}
-            max={rango.hasta}
-            onChange={(e) => e.target.value && onCambiar({ ...rango, desde: e.target.value })}
-            className={campo}
-          />
-        </label>
-        <label className="flex items-center gap-2">
-          hasta
-          <input
-            type="date"
-            value={rango.hasta}
-            min={rango.desde}
-            onChange={(e) => e.target.value && onCambiar({ ...rango, hasta: e.target.value })}
-            className={campo}
-          />
-        </label>
-      </div>
+      </ToggleGroup>
+      <SelectorRangoFechas desde={rango.desde} hasta={rango.hasta} onCambiar={onCambiar} />
     </div>
   );
 }
@@ -202,65 +195,46 @@ function Seccion({
 
 function BotonVista({ comoTabla, onCambiar }: { comoTabla: boolean; onCambiar: () => void }) {
   return (
-    <button
-      type="button"
-      onClick={onCambiar}
-      aria-pressed={comoTabla}
-      className="rounded-md border border-borde px-2.5 py-1 text-sm font-medium text-tinta-2 transition-colors duration-150 hover:border-borde-fuerte hover:text-tinta"
-    >
+    <Button variant="outline" onClick={onCambiar} aria-pressed={comoTabla} className="text-tinta-2">
       {comoTabla ? "Ver gráfico" : "Ver tabla"}
-    </button>
+    </Button>
   );
 }
 
-/** Globo de ayuda sobre la marca bajo el puntero; se ubica relativo al contenedor con `data-globo`. */
-function useGlobo() {
-  const [globo, setGlobo] = useState<{ x: number; y: number; contenido: ReactNode } | null>(null);
-  const mostrar = (elemento: HTMLElement, contenido: ReactNode) => {
-    const caja = elemento.closest("[data-globo]")?.getBoundingClientRect();
-    if (!caja) return;
-    const r = elemento.getBoundingClientRect();
-    const x = Math.min(Math.max(r.left - caja.left + r.width / 2, 90), caja.width - 90);
-    setGlobo({ x, y: r.top - caja.top, contenido });
-  };
-  const nodo = globo && (
-    <div
-      role="tooltip"
-      className="pointer-events-none absolute z-10 w-max max-w-[15rem] -translate-x-1/2 -translate-y-full rounded-md bg-banda px-3 py-2 text-sm text-banda-tinta shadow-[0_4px_12px_rgb(0_0_0/0.18)]"
-      style={{ left: globo.x, top: globo.y - 8 }}
-    >
-      {globo.contenido}
-    </div>
+/** Contenido común de los globos de ayuda de los gráficos. */
+function Globo({ titulo, detalle }: { titulo: string; detalle: string }) {
+  return (
+    <span className="grid gap-0.5 text-sm">
+      <span className="font-medium">{titulo}</span>
+      <span className="numeros opacity-75">{detalle}</span>
+    </span>
   );
-  return { mostrar, ocultar: () => setGlobo(null), nodo };
 }
 
 function TablaSimple({ columnas, filas }: { columnas: string[]; filas: ReactNode[][] }) {
   return (
-    <div className="overflow-x-auto pt-3">
-      <table className="numeros w-full text-[15px]">
-        <thead>
-          <tr className="border-b border-borde">
-            {columnas.map((c, i) => (
-              <th key={c} className={`voz-cartel py-2 text-xs text-tinta-3 ${i === 0 ? "text-left" : "text-right"}`}>
-                {c}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-borde">
-          {filas.map((fila, i) => (
-            <tr key={i}>
-              {fila.map((celda, j) => (
-                <td key={j} className={`py-1.5 ${j === 0 ? "text-left text-tinta" : "text-right text-tinta-2"}`}>
-                  {celda}
-                </td>
-              ))}
-            </tr>
+    <Table className="numeros mt-3 text-[15px]">
+      <TableHeader>
+        <TableRow className="hover:bg-transparent">
+          {columnas.map((c, i) => (
+            <TableHead key={c} className={`voz-cartel h-9 px-0 text-xs text-tinta-3 ${i === 0 ? "text-left" : "text-right"}`}>
+              {c}
+            </TableHead>
           ))}
-        </tbody>
-      </table>
-    </div>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {filas.map((fila, i) => (
+          <TableRow key={i}>
+            {fila.map((celda, j) => (
+              <TableCell key={j} className={`px-0 py-1.5 ${j === 0 ? "text-left text-tinta" : "text-right text-tinta-2"}`}>
+                {celda}
+              </TableCell>
+            ))}
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 }
 
@@ -307,7 +281,6 @@ function Resumen({ datos }: { datos: Metricas }) {
 
 function MapaCalor({ datos }: { datos: Metricas }) {
   const [comoTabla, setComoTabla] = useState(false);
-  const globo = useGlobo();
   const horas = [...new Set(datos.mapaCalor.map((c) => c.hora))].sort((a, b) => a - b);
   const celda = new Map(datos.mapaCalor.map((c) => [`${c.diaSemana}-${c.hora}`, c.ocupacion]));
   const valles = new Set(datos.oportunidades.franjasValle.map((v) => `${v.diaSemana}-${v.hora}`));
@@ -325,7 +298,7 @@ function MapaCalor({ datos }: { datos: Metricas }) {
           filas={horas.map((h) => [etiqueta(h), ...[1, 2, 3, 4, 5].map((d) => porcentaje(celda.get(`${d}-${h}`) ?? 0))])}
         />
       ) : (
-        <div data-globo className="relative pt-4" onMouseLeave={globo.ocultar}>
+        <div className="pt-4">
           <div className="overflow-x-auto">
             <div
               className="grid min-w-[560px] gap-[2px]"
@@ -340,7 +313,7 @@ function MapaCalor({ datos }: { datos: Metricas }) {
                 </span>
               ))}
               {[1, 2, 3, 4, 5].map((d) => (
-                <FilaCalor key={d} dia={d} horas={horas} celda={celda} valles={valles} globo={globo} />
+                <FilaCalor key={d} dia={d} horas={horas} celda={celda} valles={valles} />
               ))}
             </div>
           </div>
@@ -357,7 +330,6 @@ function MapaCalor({ datos }: { datos: Metricas }) {
               <MarcaValle /> Franja valle, candidata a promoción
             </span>
           </div>
-          {globo.nodo}
         </div>
       )}
     </Seccion>
@@ -369,13 +341,11 @@ function FilaCalor({
   horas,
   celda,
   valles,
-  globo,
 }: {
   dia: number;
   horas: number[];
   celda: Map<string, number>;
   valles: Set<string>;
-  globo: ReturnType<typeof useGlobo>;
 }) {
   return (
     <>
@@ -385,26 +355,19 @@ function FilaCalor({
         const valor = celda.get(clave) ?? 0;
         const esValle = valles.has(clave);
         return (
-          <span
-            key={h}
-            className="relative grid h-9 place-items-center rounded-[3px]"
-            style={{ background: tonoOcupacion(valor) }}
-            onMouseEnter={(e) =>
-              globo.mostrar(
-                e.currentTarget,
-                <>
-                  <span className="block font-medium">
-                    {DIAS[dia]} {String(h).padStart(2, "0")}:00 a {String(h + 1).padStart(2, "0")}:00
-                  </span>
-                  <span className="numeros block text-banda-tinta-2">
-                    {porcentaje(valor)} de ocupación{esValle && " · franja valle"}
-                  </span>
-                </>,
-              )
-            }
-          >
-            {esValle && <MarcaValle />}
-          </span>
+          <Tooltip key={h}>
+            <TooltipTrigger asChild>
+              <span className="relative grid h-9 place-items-center rounded-[3px]" style={{ background: tonoOcupacion(valor) }}>
+                {esValle && <MarcaValle />}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>
+              <Globo
+                titulo={`${DIAS[dia]} ${String(h).padStart(2, "0")}:00 a ${String(h + 1).padStart(2, "0")}:00`}
+                detalle={`${porcentaje(valor)} de ocupación${esValle ? " · franja valle" : ""}`}
+              />
+            </TooltipContent>
+          </Tooltip>
         );
       })}
     </>
@@ -463,7 +426,6 @@ function OcupacionPorSala({ datos }: { datos: Metricas }) {
 
 function Tendencia({ datos }: { datos: Metricas }) {
   const [comoTabla, setComoTabla] = useState(false);
-  const globo = useGlobo();
   const semanas = datos.tendenciaSemanal;
   const maximo = Math.max(0.25, Math.ceil(Math.max(0, ...semanas.map((s) => s.ocupacion)) * 4) / 4);
   const marcas = Array.from({ length: Math.round(maximo / 0.25) + 1 }, (_, i) => i * 0.25);
@@ -485,7 +447,7 @@ function Tendencia({ datos }: { datos: Metricas }) {
       ) : semanas.length === 0 ? (
         <p className="pt-3 text-tinta-2">El período elegido no tiene días hábiles.</p>
       ) : (
-        <div data-globo className="relative pt-6" onMouseLeave={globo.ocultar}>
+        <div className="pt-6">
           <div className="grid grid-cols-[2.5rem_minmax(0,1fr)]">
             <div className="relative h-44">
               {marcas.map((m) => (
@@ -508,32 +470,29 @@ function Tendencia({ datos }: { datos: Metricas }) {
               ))}
               <div className="absolute inset-0 flex items-end gap-[2px]">
                 {semanas.map((s) => (
-                  <div
-                    key={s.semana}
-                    className="flex h-full flex-1 items-end justify-center"
-                    onMouseEnter={(e) =>
-                      globo.mostrar(
-                        e.currentTarget.firstElementChild as HTMLElement,
-                        <>
-                          <span className="block font-medium">Semana del {sinDiaSemana(s.semana)}</span>
-                          <span className="numeros block text-banda-tinta-2">
-                            {porcentaje(s.ocupacion)} · {horasTexto(s.horasReservadas)}
-                            {s.semana > semanaActual ? " comprometidas" : s.semana === semanaActual ? " (en curso)" : ""}
-                          </span>
-                        </>,
-                      )
-                    }
-                  >
-                    <div
-                      className="w-full max-w-7 rounded-t-[4px]"
-                      style={{
-                        height: `${(s.ocupacion / maximo) * 100}%`,
-                        background: s.semana > semanaActual ? "transparent" : "var(--linea-c)",
-                        border: s.semana > semanaActual ? "2px dashed var(--linea-c)" : undefined,
-                        borderBottom: "none",
-                      }}
-                    />
-                  </div>
+                  <Tooltip key={s.semana}>
+                    <TooltipTrigger asChild>
+                      <div className="flex h-full flex-1 items-end justify-center">
+                        <div
+                          className="w-full max-w-7 rounded-t-[4px]"
+                          style={{
+                            height: `${(s.ocupacion / maximo) * 100}%`,
+                            background: s.semana > semanaActual ? "transparent" : "var(--linea-c)",
+                            border: s.semana > semanaActual ? "2px dashed var(--linea-c)" : undefined,
+                            borderBottom: "none",
+                          }}
+                        />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <Globo
+                        titulo={`Semana del ${sinDiaSemana(s.semana)}`}
+                        detalle={`${porcentaje(s.ocupacion)} · ${horasTexto(s.horasReservadas)}${
+                          s.semana > semanaActual ? " comprometidas" : s.semana === semanaActual ? " (en curso)" : ""
+                        }`}
+                      />
+                    </TooltipContent>
+                  </Tooltip>
                 ))}
               </div>
             </div>
@@ -551,7 +510,6 @@ function Tendencia({ datos }: { datos: Metricas }) {
               Semanas futuras: horas ya reservadas
             </p>
           )}
-          {globo.nodo}
         </div>
       )}
     </Seccion>
@@ -689,78 +647,65 @@ function TablaEmpresas({ datos }: { datos: Metricas }) {
 
   return (
     <Seccion titulo="Comportamiento por empresa" className="mt-12">
-      <div className="mt-3 overflow-x-auto">
-        <table className="numeros w-full min-w-[820px] text-[15px]">
-          <thead className="border-b border-borde">
-            <tr>
-              {(Object.keys(COLUMNAS_EMPRESA) as Orden["clave"][]).map((clave, i) => {
-                const activa = orden.clave === clave;
-                return (
-                  <th
-                    key={clave}
-                    aria-sort={activa ? (orden.descendente ? "descending" : "ascending") : "none"}
-                    className={`px-3 py-1.5 first:pl-0 ${i === 0 ? "text-left" : "text-right"}`}
+      <Table className="numeros mt-3 min-w-[820px] text-[15px]">
+        <TableHeader>
+          <TableRow className="hover:bg-transparent">
+            {(Object.keys(COLUMNAS_EMPRESA) as Orden["clave"][]).map((clave, i) => {
+              const activa = orden.clave === clave;
+              const Icono = orden.descendente ? ChevronDownIcon : ChevronUpIcon;
+              return (
+                <TableHead
+                  key={clave}
+                  aria-sort={activa ? (orden.descendente ? "descending" : "ascending") : "none"}
+                  className={`px-3 first:pl-0 ${i === 0 ? "text-left" : "text-right"}`}
+                >
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => ordenarPor(clave)}
+                    className={`voz-cartel -mx-2 gap-1 text-xs ${activa ? "text-tinta" : "text-tinta-3"}`}
                   >
-                    <button
-                      type="button"
-                      onClick={() => ordenarPor(clave)}
-                      className={`voz-cartel inline-flex items-center gap-1 rounded py-1 text-xs transition-colors duration-150 hover:text-tinta ${
-                        activa ? "text-tinta" : "text-tinta-3"
-                      }`}
-                    >
-                      {COLUMNAS_EMPRESA[clave].etiqueta}
-                      <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden className={activa ? "" : "opacity-0"}>
-                        <path
-                          d={orden.descendente ? "M2 3.5 5 6.5 8 3.5" : "M2 6.5 5 3.5 8 6.5"}
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </button>
-                  </th>
-                );
-              })}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-borde">
-            {filas.map((e) => (
-              <tr key={e.empresa.id} className="hover:bg-superficie-2">
-                <td className="py-2.5 pl-0 pr-3 text-left font-medium text-tinta">{e.empresa.nombre}</td>
-                <td className="px-3 py-2.5 text-right text-tinta">{horasTexto(e.horasReservadas)}</td>
-                <td className="px-3 py-2.5 text-right text-tinta-2">{porcentaje(e.participacion)}</td>
-                <td className="px-3 py-2.5 text-right text-tinta-2">{e.reservas}</td>
-                <td className="px-3 py-2.5 text-right text-tinta-2">{porcentaje(e.tasaCancelacion)}</td>
-                <td className="px-3 py-2.5 text-right">
-                  {tardias.has(e.empresa.id) ? (
-                    <Etiqueta tono="aviso">{e.cancelacionesTardias}</Etiqueta>
-                  ) : (
-                    <span className="text-tinta-2">{e.cancelacionesTardias}</span>
-                  )}
-                </td>
-                <td className="px-3 py-2.5 text-right text-tinta-2">{e.reservas ? porcentaje(e.usoCapacidad) : "—"}</td>
-                <td className="px-3 py-2.5 text-right">
-                  {inactivas.has(e.empresa.id) ? (
-                    <Etiqueta tono="aviso">
-                      {e.diasDesdeUltimaReserva === null ? "Nunca" : `Hace ${e.diasDesdeUltimaReserva} días`}
-                    </Etiqueta>
-                  ) : (
-                    <span className="text-tinta-2">
-                      {e.diasDesdeUltimaReserva === null
-                        ? "Nunca"
-                        : e.diasDesdeUltimaReserva === 0
-                          ? "Hoy"
-                          : `Hace ${e.diasDesdeUltimaReserva} ${e.diasDesdeUltimaReserva === 1 ? "día" : "días"}`}
-                    </span>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                    {COLUMNAS_EMPRESA[clave].etiqueta}
+                    <Icono aria-hidden className={activa ? "" : "opacity-0"} />
+                  </Button>
+                </TableHead>
+              );
+            })}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {filas.map((e) => (
+            <TableRow key={e.empresa.id}>
+              <TableCell className="py-2.5 pl-0 pr-3 text-left font-medium text-tinta">{e.empresa.nombre}</TableCell>
+              <TableCell className="px-3 py-2.5 text-right text-tinta">{horasTexto(e.horasReservadas)}</TableCell>
+              <TableCell className="px-3 py-2.5 text-right text-tinta-2">{porcentaje(e.participacion)}</TableCell>
+              <TableCell className="px-3 py-2.5 text-right text-tinta-2">{e.reservas}</TableCell>
+              <TableCell className="px-3 py-2.5 text-right text-tinta-2">{porcentaje(e.tasaCancelacion)}</TableCell>
+              <TableCell className="px-3 py-2.5 text-right">
+                {tardias.has(e.empresa.id) ? (
+                  <Resaltado>{e.cancelacionesTardias}</Resaltado>
+                ) : (
+                  <span className="text-tinta-2">{e.cancelacionesTardias}</span>
+                )}
+              </TableCell>
+              <TableCell className="px-3 py-2.5 text-right text-tinta-2">{e.reservas ? porcentaje(e.usoCapacidad) : "—"}</TableCell>
+              <TableCell className="px-3 py-2.5 text-right">
+                {inactivas.has(e.empresa.id) ? (
+                  <Resaltado>{e.diasDesdeUltimaReserva === null ? "Nunca" : `Hace ${e.diasDesdeUltimaReserva} días`}</Resaltado>
+                ) : (
+                  <span className="text-tinta-2">
+                    {e.diasDesdeUltimaReserva === null
+                      ? "Nunca"
+                      : e.diasDesdeUltimaReserva === 0
+                        ? "Hoy"
+                        : `Hace ${e.diasDesdeUltimaReserva} ${e.diasDesdeUltimaReserva === 1 ? "día" : "días"}`}
+                  </span>
+                )}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
       <p className="pt-3 text-sm text-tinta-3">
         Las cancelaciones hechas por la administración no cuentan contra la empresa. Resaltadas: inactividad de más de 30 días y
         cancelaciones tardías frecuentes.
@@ -769,23 +714,22 @@ function TablaEmpresas({ datos }: { datos: Metricas }) {
   );
 }
 
-function Etiqueta({ tono, children }: { tono: "aviso"; children: ReactNode }) {
-  const estilos = { aviso: "bg-aviso-suelo text-aviso" }[tono];
-  return <span className={`inline-flex rounded px-2 py-0.5 text-sm font-medium ${estilos}`}>{children}</span>;
+function Resaltado({ children }: { children: ReactNode }) {
+  return <Badge className="h-6 rounded-sm bg-aviso-suelo px-2 text-sm text-aviso">{children}</Badge>;
 }
 
 // --- Carga ------------------------------------------------------------------------------
 
 function Esqueleto() {
   return (
-    <div aria-hidden className="mt-6">
-      <div className="canto mt-8 h-[104px] animate-pulse bg-superficie-2" />
+    <div aria-hidden>
+      <Skeleton className="canto mt-8 h-[104px] rounded-none" />
       <div className="mt-12 grid gap-x-10 gap-y-12 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="grid gap-12">
-          <div className="canto h-72 animate-pulse bg-superficie-2" />
-          <div className="canto h-60 animate-pulse bg-superficie-2" />
+          <Skeleton className="canto h-72 rounded-none" />
+          <Skeleton className="canto h-60 rounded-none" />
         </div>
-        <div className="canto h-[34rem] animate-pulse bg-superficie-2" />
+        <Skeleton className="canto h-[34rem] rounded-none" />
       </div>
     </div>
   );

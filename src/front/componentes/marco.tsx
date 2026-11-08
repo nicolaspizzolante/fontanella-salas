@@ -4,12 +4,29 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { pedirApi, type Actor, type Empresa } from "../api";
+import { ArrowRightIcon } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { ProveedorApp, useApp } from "../contexto";
 
 export function Marco({ children }: { children: ReactNode }) {
   return (
     <ProveedorApp>
-      <Contenido>{children}</Contenido>
+      <TooltipProvider delayDuration={150}>
+        <Contenido>{children}</Contenido>
+      </TooltipProvider>
     </ProveedorApp>
   );
 }
@@ -62,16 +79,18 @@ function BandaSuperior() {
                   const activa = ruta === s.href;
                   return (
                     <li key={s.href}>
-                      <Link
-                        href={s.href}
-                        aria-current={activa ? "page" : undefined}
-                        className={`relative flex h-12 items-center px-3 text-[15px] font-medium transition-colors duration-150 sm:h-14 ${
-                          activa ? "text-banda-tinta" : "text-banda-tinta-2 hover:text-banda-tinta"
+                      <Button
+                        asChild
+                        variant="ghost"
+                        className={`relative h-12 rounded-none px-3 text-[15px] hover:bg-banda-2 sm:h-14 ${
+                          activa ? "text-banda-tinta hover:text-banda-tinta" : "text-banda-tinta-2 hover:text-banda-tinta"
                         }`}
                       >
-                        {s.etiqueta}
-                        {activa && <span className="absolute inset-x-3 bottom-0 h-1 bg-banda-tinta" />}
-                      </Link>
+                        <Link href={s.href} aria-current={activa ? "page" : undefined}>
+                          {s.etiqueta}
+                          {activa && <span className="absolute inset-x-3 bottom-0 h-1 bg-banda-tinta" />}
+                        </Link>
+                      </Button>
                     </li>
                   );
                 })}
@@ -105,12 +124,13 @@ function SelectorIdentidad() {
   const valor = actor?.tipo === "admin" ? "admin" : (actor?.empresaId ?? "");
 
   return (
-    <label className="flex items-center gap-2 text-sm">
-      <span className="hidden text-banda-tinta-2 md:inline">Usando como</span>
-      <select
+    <div className="flex items-center gap-2 text-sm">
+      <span id="etiqueta-identidad" className="hidden text-banda-tinta-2 md:inline">
+        Usando como
+      </span>
+      <Select
         value={valor}
-        onChange={(evento) => {
-          const id = evento.target.value;
+        onValueChange={(id) => {
           const nuevo: Actor =
             id === "admin"
               ? { tipo: "admin" }
@@ -118,21 +138,31 @@ function SelectorIdentidad() {
           elegirActor(nuevo);
           router.push(inicioDe(nuevo));
         }}
-        className="max-w-[13rem] rounded-md border border-banda-2 bg-banda-2 py-1.5 pl-2.5 pr-8 font-medium text-banda-tinta hover:border-banda-tinta-2"
       >
-        <optgroup label="Empresas clientes">
-          {actor?.tipo === "empresa" && !empresas && <option value={actor.empresaId}>{actor.nombre}</option>}
-          {empresas?.map((e) => (
-            <option key={e.id} value={e.id}>
-              {e.nombre}
-            </option>
-          ))}
-        </optgroup>
-        <optgroup label="Empresa administradora">
-          <option value="admin">Administración</option>
-        </optgroup>
-      </select>
-    </label>
+        <SelectTrigger
+          aria-labelledby="etiqueta-identidad"
+          className="h-9 w-[13rem] border-banda-2 bg-banda-2 font-medium text-banda-tinta hover:border-banda-tinta-2 data-[size=default]:h-9 [&_svg]:text-banda-tinta-2"
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent align="end" position="popper">
+          <SelectGroup>
+            <SelectLabel>Empresas clientes</SelectLabel>
+            {actor?.tipo === "empresa" && !empresas && <SelectItem value={actor.empresaId}>{actor.nombre}</SelectItem>}
+            {empresas?.map((e) => (
+              <SelectItem key={e.id} value={e.id}>
+                {e.nombre}
+              </SelectItem>
+            ))}
+          </SelectGroup>
+          <SelectSeparator />
+          <SelectGroup>
+            <SelectLabel>Empresa administradora</SelectLabel>
+            <SelectItem value="admin">Administración</SelectItem>
+          </SelectGroup>
+        </SelectContent>
+      </Select>
+    </div>
   );
 }
 
@@ -156,38 +186,39 @@ function Entrada() {
 
       <h2 className="voz-cartel mt-8 text-sm text-tinta-3">Empresas clientes</h2>
       {error && (
-        <p role="alert" className="mt-3 rounded-md bg-error-suelo px-3 py-2 text-sm text-error">
-          No pudimos cargar las empresas. ¿Está levantada la base de datos?
-        </p>
+        <Alert variant="destructive" className="mt-3 border-transparent bg-error-suelo">
+          <AlertDescription>No pudimos cargar las empresas. ¿Está levantada la base de datos?</AlertDescription>
+        </Alert>
       )}
-      <ul className="mt-3 divide-y divide-borde overflow-hidden rounded-lg border border-borde bg-superficie">
+      <ul className="canto mt-3 divide-y divide-borde">
         {!empresas && !error &&
           Array.from({ length: 4 }, (_, i) => (
-            <li key={i} className="h-[52px] animate-pulse bg-superficie-2" />
+            <li key={i} className="py-2">
+              <Skeleton className="h-9" />
+            </li>
           ))}
         {empresas?.map((e) => (
           <li key={e.id}>
-            <button
-              type="button"
+            <Button
+              variant="ghost"
               onClick={() => entrar({ tipo: "empresa", empresaId: e.id, nombre: e.nombre })}
-              className="flex w-full items-center justify-between px-4 py-3.5 text-left transition-colors duration-150 hover:bg-superficie-2"
+              className="h-auto w-full justify-between rounded-none px-2 py-3.5 text-base"
             >
-              <span className="font-medium">{e.nombre}</span>
-              <span aria-hidden className="text-tinta-3">→</span>
-            </button>
+              {e.nombre}
+              <ArrowRightIcon className="text-tinta-3" />
+            </Button>
           </li>
         ))}
       </ul>
 
       <h2 className="voz-cartel mt-8 text-sm text-tinta-3">Empresa administradora</h2>
-      <button
-        type="button"
+      <Button
         onClick={() => entrar({ tipo: "admin" })}
-        className="mt-3 flex w-full items-center justify-between rounded-lg bg-banda px-4 py-3.5 text-left text-banda-tinta transition-colors duration-150 hover:bg-banda-2"
+        className="mt-3 h-auto w-full justify-between px-4 py-3.5 text-base hover:bg-banda-2"
       >
-        <span className="font-medium">Administración</span>
-        <span aria-hidden className="text-banda-tinta-2">→</span>
-      </button>
+        Administración
+        <ArrowRightIcon className="text-banda-tinta-2" />
+      </Button>
     </div>
   );
 }

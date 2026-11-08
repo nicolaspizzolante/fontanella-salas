@@ -1,6 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { ErrorApi, type DetalleError, type Disponibilidad } from "../api";
 import { NombreSala } from "../componentes/insignia-sala";
 import { useApp } from "../contexto";
@@ -103,9 +107,10 @@ export function PanelReserva({ fecha, sala, seleccion, esAdmin, cerrado, onDesca
           <p className="mt-2 text-sm text-tinta-3">Hacé clic en otra franja de la misma sala para extender la reserva.</p>
         )}
 
-        <label className="mt-5 block">
-          <span className="text-sm font-medium">Asistentes</span>
-          <input
+        <div className="mt-5 grid gap-1.5">
+          <Label htmlFor="asistentes">Asistentes</Label>
+          <Input
+            id="asistentes"
             type="number"
             inputMode="numeric"
             min={1}
@@ -114,59 +119,54 @@ export function PanelReserva({ fecha, sala, seleccion, esAdmin, cerrado, onDesca
             onChange={(e) => setAsistentes(e.target.valueAsNumber)}
             aria-invalid={excedeCapacidad || asistentesInvalidos}
             aria-describedby="ayuda-asistentes"
-            className="numeros mt-1.5 block w-full rounded-md border border-borde bg-superficie px-3 py-2 hover:border-borde-fuerte aria-[invalid=true]:border-error"
+            className="numeros h-10 text-base"
           />
-          <span id="ayuda-asistentes" className={`mt-1 block text-sm ${excedeCapacidad ? "text-error" : "text-tinta-3"}`}>
+          <span id="ayuda-asistentes" className={`text-sm ${excedeCapacidad ? "text-error" : "text-tinta-3"}`}>
             {excedeCapacidad
               ? `Esta sala admite hasta ${sala.capacidad} personas.`
               : asistentesInvalidos
                 ? "Indicá al menos una persona."
                 : `Máximo ${sala.capacidad}.`}
           </span>
-        </label>
+        </div>
 
-        <label className="mt-4 block">
-          <span className="text-sm font-medium">
+        <div className="mt-4 grid gap-1.5">
+          <Label htmlFor="motivo">
             Motivo <span className="font-normal text-tinta-3">(opcional)</span>
-          </span>
-          <input
+          </Label>
+          <Input
+            id="motivo"
             type="text"
             maxLength={200}
             value={motivo}
             onChange={(e) => setMotivo(e.target.value)}
             placeholder="Ej.: Reunión con cliente"
-            className="mt-1.5 block w-full rounded-md border border-borde bg-superficie px-3 py-2 placeholder:text-tinta-3 hover:border-borde-fuerte"
+            className="h-10 text-base"
           />
-        </label>
+        </div>
 
         {error && (
-          <div role="alert" className="mt-4 rounded-md bg-error-suelo px-3 py-2.5 text-sm text-error">
-            <p className="font-medium">{error.mensaje}</p>
+          <Alert variant="destructive" className="mt-4 border-transparent bg-error-suelo">
+            <AlertTitle>{error.mensaje}</AlertTitle>
             {error.detalles.length > 0 && (
-              <ul className="mt-1.5 list-disc space-y-0.5 pl-4">
-                {error.detalles.map((d, i) => (
-                  <li key={i}>{d.mensaje}</li>
-                ))}
-              </ul>
+              <AlertDescription className="text-current">
+                <ul className="list-disc space-y-0.5 pl-4">
+                  {error.detalles.map((d, i) => (
+                    <li key={i}>{d.mensaje}</li>
+                  ))}
+                </ul>
+              </AlertDescription>
             )}
-          </div>
+          </Alert>
         )}
 
         <div className="mt-5 flex items-center gap-3">
-          <button
-            type="submit"
-            disabled={enviando || excedeCapacidad || asistentesInvalidos}
-            className="flex-1 rounded-md bg-banda px-4 py-2.5 font-semibold text-banda-tinta transition-colors duration-150 hover:bg-banda-2 disabled:cursor-not-allowed disabled:opacity-50"
-          >
+          <Button type="submit" size="lg" disabled={enviando || excedeCapacidad || asistentesInvalidos} className="h-10 flex-1 text-[15px] font-semibold hover:bg-banda-2">
             {enviando ? "Confirmando…" : "Confirmar reserva"}
-          </button>
-          <button
-            type="button"
-            onClick={onDescartar}
-            className="rounded-md px-3 py-2.5 text-sm font-medium text-tinta-2 hover:bg-superficie-2 hover:text-tinta"
-          >
+          </Button>
+          <Button type="button" variant="ghost" size="lg" onClick={onDescartar} className="h-10 text-tinta-2">
             Descartar
-          </button>
+          </Button>
         </div>
       </form>
     </aside>

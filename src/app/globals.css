@@ -1,4 +1,9 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* La app es solo clara: las variantes dark: de shadcn solo aplican bajo una clase .dark que no usamos. */
+@custom-variant dark (&:is(.dark *));
 
 /*
  * Mundo visual: señalética del Subte de Buenos Aires.
@@ -43,6 +48,26 @@
   --aviso: #7a5200;
   --aviso-suelo: #fff4d4;
   --foco: #1c4fa0;
+
+  /* Tokens de shadcn/ui, apuntados a la paleta de arriba. */
+  --background: var(--suelo);
+  --foreground: var(--tinta);
+  --card: var(--superficie);
+  --card-foreground: var(--tinta);
+  --popover: var(--superficie);
+  --popover-foreground: var(--tinta);
+  --primary: var(--banda);
+  --primary-foreground: var(--banda-tinta);
+  --secondary: var(--superficie-2);
+  --secondary-foreground: var(--tinta);
+  --muted: var(--superficie-2);
+  --muted-foreground: var(--tinta-3);
+  --accent: var(--superficie-2);
+  --accent-foreground: var(--tinta);
+  --destructive: var(--error);
+  --border: var(--borde);
+  --input: var(--borde-fuerte);
+  --ring: var(--foco);
 }
 
 @theme inline {
@@ -67,6 +92,25 @@
   --color-aviso: var(--aviso);
   --color-aviso-suelo: var(--aviso-suelo);
   --color-foco: var(--foco);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
   --font-sans: var(--fuente-archivo), ui-sans-serif, system-ui, sans-serif;
 
   /* Chapas de cartel: esquinas casi rectas en todos los controles. */
@@ -75,6 +119,14 @@
   --radius-md: 2px;
   --radius-lg: 2px;
   --radius: 2px;
+  --radius-xl: 2px;
+  --radius-2xl: 2px;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
 }
 
 html {

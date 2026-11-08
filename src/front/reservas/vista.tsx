@@ -2,6 +2,14 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ErrorApi, pedirApi, type Reserva } from "../api";
 import { NombreSala } from "../componentes/insignia-sala";
 import { useApp } from "../contexto";
@@ -89,61 +97,64 @@ export function VistaReservas() {
       <h1 className="titulo-cartel text-[40px]">{esAdmin ? "Reservas" : "Mis reservas"}</h1>
 
       <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
-        <div role="tablist" aria-label="Estado de las reservas" className="inline-flex rounded-md border border-borde bg-superficie p-1">
-          {PESTANAS.map((p) => (
-            <button
-              key={p.id}
-              role="tab"
-              type="button"
-              aria-selected={pestana === p.id}
-              onClick={() => {
-                setPestana(p.id);
-                setMensaje(null);
-              }}
-              className={`rounded px-3.5 py-1.5 text-sm font-medium transition-colors duration-150 ${
-                pestana === p.id ? "bg-banda text-banda-tinta" : "text-tinta-2 hover:text-tinta"
-              }`}
-            >
-              {p.etiqueta}
-            </button>
-          ))}
-        </div>
+        <Tabs
+          value={pestana}
+          onValueChange={(v) => {
+            setPestana(v as Pestana);
+            setMensaje(null);
+          }}
+        >
+          <TabsList aria-label="Estado de las reservas" className="h-10 border border-borde bg-superficie p-1">
+            {PESTANAS.map((p) => (
+              <TabsTrigger
+                key={p.id}
+                value={p.id}
+                className="px-3.5 text-sm data-[state=active]:bg-banda data-[state=active]:text-banda-tinta data-[state=active]:shadow-none"
+              >
+                {p.etiqueta}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
         {esAdmin && empresas.length > 0 && (
-          <label className="flex items-center gap-2 text-sm text-tinta-2">
-            Empresa
-            <select
-              value={filtroEmpresa}
-              onChange={(e) => setFiltroEmpresa(e.target.value)}
-              className="rounded-md border border-borde bg-superficie py-1.5 pl-2.5 pr-8 text-tinta hover:border-borde-fuerte"
-            >
-              <option value="">Todas</option>
-              {empresas.map(([id, nombre]) => (
-                <option key={id} value={id}>
-                  {nombre}
-                </option>
-              ))}
-            </select>
-          </label>
+          <div className="flex items-center gap-2 text-sm text-tinta-2">
+            <Label htmlFor="filtro-empresa" className="font-normal text-tinta-2">
+              Empresa
+            </Label>
+            <Select value={filtroEmpresa || "todas"} onValueChange={(v) => setFiltroEmpresa(v === "todas" ? "" : v)}>
+              <SelectTrigger id="filtro-empresa" className="h-10 w-[13rem] data-[size=default]:h-10">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent position="popper" align="end">
+                <SelectItem value="todas">Todas</SelectItem>
+                {empresas.map(([id, nombre]) => (
+                  <SelectItem key={id} value={id}>
+                    {nombre}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         )}
       </div>
 
       {mensaje && (
-        <div
+        <Alert
           role={mensaje.tipo === "error" ? "alert" : "status"}
-          className={`mt-4 rounded-md px-4 py-3 text-[15px] ${mensaje.tipo === "exito" ? "bg-exito-suelo text-exito" : "bg-error-suelo text-error"}`}
+          className={`mt-4 border-transparent px-4 py-3 ${mensaje.tipo === "exito" ? "bg-exito-suelo text-exito" : "bg-error-suelo text-error"}`}
         >
-          {mensaje.texto}
-        </div>
+          <AlertDescription className="text-[15px] text-current">{mensaje.texto}</AlertDescription>
+        </Alert>
       )}
 
       <div className="canto mt-4">
         {error ? (
-          <div className="py-6">
-            <p role="alert" className="text-error">{error}</p>
-            <button type="button" onClick={cargar} className="mt-3 text-sm font-medium underline underline-offset-4">
+          <Alert variant="destructive" className="my-4 border-transparent bg-error-suelo">
+            <AlertDescription className="text-current">{error}</AlertDescription>
+            <Button variant="link" size="sm" onClick={cargar} className="mt-1 h-auto justify-start p-0 text-current">
               Reintentar
-            </button>
-          </div>
+            </Button>
+          </Alert>
         ) : !visibles ? (
           <TablaEsqueleto />
         ) : visibles.length === 0 ? (
@@ -172,32 +183,30 @@ function TablaReservas({
   ahora: number;
   onCancelar: (r: Reserva) => Promise<void>;
 }) {
-  const th = "voz-cartel px-3 py-2.5 text-left text-xs text-tinta-3 first:pl-0";
+  const th = "voz-cartel h-10 px-3 text-xs text-tinta-3 first:pl-0";
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-[720px] text-[15px]">
-        <thead className="border-b border-borde">
-          <tr>
-            <th className={th}>Día</th>
-            <th className={th}>Horario</th>
-            <th className={th}>Sala</th>
-            {esAdmin && <th className={th}>Empresa</th>}
-            <th className={`${th} text-right`}>Asistentes</th>
-            <th className={th}>Motivo</th>
-            <th className={th}>
-              <span className="sr-only">Acciones</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-borde">
-          {reservas.map((r, i) => {
-            const fecha = fechaDe(r.inicio);
-            const mismaFecha = i > 0 && fechaDe(reservas[i - 1].inicio) === fecha;
-            return <FilaReserva key={r.id} reserva={r} mostrarFecha={!mismaFecha} pestana={pestana} esAdmin={esAdmin} ahora={ahora} onCancelar={onCancelar} />;
-          })}
-        </tbody>
-      </table>
-    </div>
+    <Table className="min-w-[720px] text-[15px]">
+      <TableHeader>
+        <TableRow className="hover:bg-transparent">
+          <TableHead className={th}>Día</TableHead>
+          <TableHead className={th}>Horario</TableHead>
+          <TableHead className={th}>Sala</TableHead>
+          {esAdmin && <TableHead className={th}>Empresa</TableHead>}
+          <TableHead className={`${th} text-right`}>Asistentes</TableHead>
+          <TableHead className={th}>Motivo</TableHead>
+          <TableHead className={th}>
+            <span className="sr-only">Acciones</span>
+          </TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {reservas.map((r, i) => {
+          const fecha = fechaDe(r.inicio);
+          const mismaFecha = i > 0 && fechaDe(reservas[i - 1].inicio) === fecha;
+          return <FilaReserva key={r.id} reserva={r} mostrarFecha={!mismaFecha} pestana={pestana} esAdmin={esAdmin} ahora={ahora} onCancelar={onCancelar} />;
+        })}
+      </TableBody>
+    </Table>
   );
 }
 
@@ -220,44 +229,43 @@ function FilaReserva({
   const [enviando, setEnviando] = useState(false);
   const fecha = fechaDe(r.inicio);
   const empezo = new Date(r.inicio).getTime() <= ahora;
-  const td = "px-3 py-3 align-middle first:pl-0";
+  const td = "px-3 py-3 first:pl-0";
 
   return (
-    <tr className={`hover:bg-superficie-2 ${mostrarFecha ? "border-t border-t-borde-fuerte first:border-t-0" : ""}`}>
-      <td className={`${td} titulo-cartel whitespace-nowrap text-lg`}>
+    <TableRow className={mostrarFecha ? "border-t border-t-borde-fuerte first:border-t-0" : ""}>
+      <TableCell className={`${td} titulo-cartel whitespace-nowrap text-lg`}>
         {mostrarFecha ? (fecha === hoy() ? "Hoy" : capitalizar(fechaCorta(fecha))) : ""}
-      </td>
-      <td className={`${td} numeros whitespace-nowrap`}>{rangoHorario(r.inicio, r.fin)}</td>
-      <td className={td}>
+      </TableCell>
+      <TableCell className={`${td} numeros`}>{rangoHorario(r.inicio, r.fin)}</TableCell>
+      <TableCell className={td}>
         <NombreSala salaId={r.sala.id} nombre={r.sala.nombre} />
-      </td>
-      {esAdmin && <td className={td}>{r.empresa.nombre}</td>}
-      <td className={`${td} numeros text-right`}>{r.asistentes}</td>
-      <td className={`${td} max-w-[16rem] truncate text-tinta-2`} title={r.motivo ?? undefined}>
+      </TableCell>
+      {esAdmin && <TableCell className={td}>{r.empresa.nombre}</TableCell>}
+      <TableCell className={`${td} numeros text-right`}>{r.asistentes}</TableCell>
+      <TableCell className={`${td} max-w-[16rem] truncate text-tinta-2`} title={r.motivo ?? undefined}>
         {r.motivo ?? <span className="text-tinta-3">—</span>}
-      </td>
-      <td className={`${td} whitespace-nowrap text-right`}>
+      </TableCell>
+      <TableCell className={`${td} text-right`}>
         {pestana === "canceladas" ? (
           <span className="text-sm text-tinta-3">
             Cancelada {r.canceladaEn && `el ${fechaCorta(fechaDe(r.canceladaEn))}`}
             {r.origenCancelacion === "ADMIN" && " por la administración"}
           </span>
         ) : pestana === "proximas" && empezo ? (
-          <span className="rounded-sm bg-aviso-suelo px-2 py-1 text-xs font-semibold text-aviso">En curso</span>
+          <Badge className="rounded-sm bg-aviso-suelo font-semibold text-aviso">En curso</Badge>
         ) : pestana === "proximas" && !confirmando ? (
-          <button
-            type="button"
+          <Button
+            variant="ghost"
             onClick={() => setConfirmando(true)}
             aria-label={`Cancelar la reserva de ${r.sala.nombre} del ${fechaCorta(fecha)} de ${rangoHorario(r.inicio, r.fin)}`}
-            className="rounded-md px-3 py-1.5 text-sm font-medium text-error hover:bg-error-suelo"
+            className="text-error hover:bg-error-suelo hover:text-error"
           >
             Cancelar
-          </button>
+          </Button>
         ) : pestana === "proximas" ? (
           <span className="inline-flex items-center gap-2">
             <span className="text-sm text-tinta-2">¿Cancelar{esAdmin ? ` la reserva de ${r.empresa.nombre}` : ""}?</span>
-            <button
-              type="button"
+            <Button
               disabled={enviando}
               onClick={async () => {
                 setEnviando(true);
@@ -265,21 +273,17 @@ function FilaReserva({
                 setEnviando(false);
                 setConfirmando(false);
               }}
-              className="rounded-md bg-error px-3 py-1.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+              className="bg-error font-semibold text-white hover:bg-error/90"
             >
               {enviando ? "Cancelando…" : "Sí, cancelar"}
-            </button>
-            <button
-              type="button"
-              onClick={() => setConfirmando(false)}
-              className="rounded-md px-2.5 py-1.5 text-sm font-medium text-tinta-2 hover:bg-superficie-2"
-            >
+            </Button>
+            <Button variant="ghost" onClick={() => setConfirmando(false)} className="text-tinta-2">
               No
-            </button>
+            </Button>
           </span>
         ) : null}
-      </td>
-    </tr>
+      </TableCell>
+    </TableRow>
   );
 }
 
@@ -293,12 +297,9 @@ function Vacio({ pestana, esAdmin }: { pestana: Pestana; esAdmin: boolean }) {
     <div className="px-6 py-12 text-center">
       <p className="text-tinta-2">{textos[pestana]}</p>
       {pestana === "proximas" && !esAdmin && (
-        <Link
-          href="/disponibilidad"
-          className="mt-4 inline-block rounded-md bg-banda px-4 py-2 font-semibold text-banda-tinta hover:bg-banda-2"
-        >
-          Ver disponibilidad y reservar
-        </Link>
+        <Button asChild size="lg" className="mt-4 font-semibold hover:bg-banda-2">
+          <Link href="/disponibilidad">Ver disponibilidad y reservar</Link>
+        </Button>
       )}
     </div>
   );
@@ -308,10 +309,10 @@ function TablaEsqueleto() {
   return (
     <div className="divide-y divide-borde">
       {Array.from({ length: 5 }, (_, i) => (
-        <div key={i} className="flex items-center gap-6 px-4 py-4">
-          <div className="h-4 w-20 animate-pulse rounded bg-ocupado-suelo" />
-          <div className="h-4 w-24 animate-pulse rounded bg-ocupado-suelo" />
-          <div className="h-4 w-40 animate-pulse rounded bg-ocupado-suelo" />
+        <div key={i} className="flex items-center gap-6 py-4">
+          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-4 w-40" />
         </div>
       ))}
     </div>

@@ -1,5 +1,7 @@
 "use client";
 
+import { Alert, AlertAction, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import type { Reserva } from "../api";
 import { capitalizar, fechaDe, fechaLarga, rangoHorario } from "../formato";
 
@@ -14,8 +16,8 @@ export function Aviso({ aviso, onCerrar }: { aviso: AvisoEstado; onCerrar?: () =
   }[aviso.tipo];
 
   return (
-    <div role={aviso.tipo === "error" ? "alert" : "status"} className={`flex items-start justify-between gap-4 rounded-md px-4 py-3 ${estilos}`}>
-      <p className="text-[15px]">
+    <Alert role={aviso.tipo === "error" ? "alert" : "status"} className={`border-transparent px-4 py-3 ${estilos}`}>
+      <AlertDescription className="text-[15px] text-current">
         {aviso.tipo === "exito" ? (
           <>
             <span className="font-semibold">Reserva confirmada.</span> {aviso.reserva.sala.nombre},{" "}
@@ -24,12 +26,14 @@ export function Aviso({ aviso, onCerrar }: { aviso: AvisoEstado; onCerrar?: () =
         ) : (
           capitalizar(aviso.mensaje)
         )}
-      </p>
+      </AlertDescription>
       {onCerrar && (
-        <button type="button" onClick={onCerrar} className="shrink-0 text-sm font-medium underline-offset-4 hover:underline" aria-label="Cerrar aviso">
-          Cerrar
-        </button>
+        <AlertAction>
+          <Button variant="link" size="sm" onClick={onCerrar} className="text-current" aria-label="Cerrar aviso">
+            Cerrar
+          </Button>
+        </AlertAction>
       )}
-    </div>
+    </Alert>
   );
 }

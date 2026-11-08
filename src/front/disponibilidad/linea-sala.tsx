@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Disponibilidad } from "../api";
 import { NombreSala } from "../componentes/insignia-sala";
 import { useApp } from "../contexto";
@@ -96,11 +98,11 @@ export function LineaSala(props: {
           const propia = t.propia;
           const etiqueta = esAdmin ? t.empresa?.nombre : propia ? "Tu reserva" : "Ocupada";
           return (
+            <Tooltip key={t.inicio}>
+            <TooltipTrigger asChild>
             <div
-              key={t.inicio}
-              className="absolute top-1/2 -translate-y-1/2"
+              className="absolute top-1/2 -translate-y-1/2 py-2"
               style={{ left: pct(t.desde), width: pct(t.hasta - t.desde) }}
-              title={`${etiqueta ?? "Ocupada"} · ${textoHora(minutoDeBloque(t.desde))} a ${textoHora(minutoDeBloque(t.hasta))}`}
             >
               <div
                 className={`mx-[2px] h-4 rounded-full ${propia ? "" : "trama-ocupado"}`}
@@ -108,13 +110,21 @@ export function LineaSala(props: {
               />
               {t.hasta - t.desde >= 2 && (
                 <span
-                  className="absolute left-1 top-[-24px] max-w-full truncate text-[13px] font-semibold"
+                  className="absolute left-1 top-[-16px] max-w-full truncate text-[13px] font-semibold"
                   style={{ color: propia || esAdmin ? colorTexto : "var(--tinta-3)" }}
                 >
                   {etiqueta}
                 </span>
               )}
             </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="text-sm">
+              <span className="font-medium">{etiqueta ?? "Ocupada"}</span>
+              <span className="numeros">
+                {textoHora(minutoDeBloque(t.desde))} a {textoHora(minutoDeBloque(t.hasta))}
+              </span>
+            </TooltipContent>
+            </Tooltip>
           );
         })}
 
@@ -149,21 +159,21 @@ export function LineaSala(props: {
           <div className="absolute inset-0 grid" style={{ gridTemplateColumns: `repeat(${BLOQUES}, 1fr)` }}>
             {Array.from({ length: BLOQUES }, (_, b) =>
               libre(b) ? (
-                <button
+                <Button
                   key={b}
-                  type="button"
+                  variant="ghost"
                   onClick={() => alHacerClic(b)}
                   aria-label={`${sala.nombre}, ${textoHora(minutoDeBloque(b))} a ${textoHora(minutoDeBloque(b) + BLOQUE)}, libre`}
                   aria-pressed={seleccion ? b >= selDesde && b < selHasta : false}
-                  className="group relative h-full cursor-pointer focus-visible:z-10"
+                  className="group relative h-full w-auto min-w-0 cursor-pointer rounded-none p-0 hover:bg-transparent focus-visible:z-10 active:not-aria-[haspopup]:translate-y-0"
                 >
                   <span
                     className="absolute inset-x-[1px] top-1/2 h-5 -translate-y-1/2 rounded-sm opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100"
                     style={{ background: `color-mix(in srgb, ${color} 22%, transparent)` }}
                   />
-                </button>
+                </Button>
               ) : (
-                <span key={b} />
+                <span key={b} className="pointer-events-none" />
               ),
             )}
           </div>
