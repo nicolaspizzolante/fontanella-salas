@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Disponibilidad } from "../api";
 import { NombreSala } from "../componentes/insignia-sala";
@@ -27,8 +29,10 @@ export function LineaSala(props: {
   seleccion: Seleccion | null;
   onSeleccionar: (s: Seleccion | null) => void;
   minutoAhora: number | null;
+  ahora: Date;
+  onCancelar: (reservaId: string) => Promise<void>;
 }) {
-  const { sala, interactiva, primerBloqueLibre, seleccion, onSeleccionar, esAdmin, minutoAhora } = props;
+  const { sala, interactiva, primerBloqueLibre, seleccion, onSeleccionar, esAdmin, minutoAhora, ahora, onCancelar } = props;
   const { lineaDe } = useApp();
   const color = `var(--linea-${lineaDe(sala.id)})`;
   const colorTexto = `var(--linea-${lineaDe(sala.id)}-texto)`;
@@ -93,19 +97,16 @@ export function LineaSala(props: {
           );
         })}
 
-        {/* Tramos reservados. */}
+        {/* Tramos reservados: los propios (o todos, para la administración) que todavía no empezaron se pueden cancelar. */}
         {tramos.map((t) => {
           const propia = t.propia;
-          const etiqueta = esAdmin ? t.empresa?.nombre : propia ? "Tu reserva" : "Ocupada";
-          return (
-            <Tooltip key={t.inicio}>
-            <TooltipTrigger asChild>
-            <div
-              className="absolute top-1/2 -translate-y-1/2 py-2"
-              style={{ left: pct(t.desde), width: pct(t.hasta - t.desde) }}
-            >
-              <div
-                className={`mx-[2px] h-4 rounded-full ${propia ? "" : "trama-ocupado"}`}
+          const etiqueta = (esAdmin ? t.empresa?.nombre : propia ? "Tu reserva" : "Ocupada") ?? "Ocupada";
+          const horario = `${textoHora(minutoDeBloque(t.desde))} a ${textoHora(minutoDeBloque(t.hasta))}`;
+          const posicion = { left: pct(t.desde), width: pct(t.hasta - t.desde) };
+          const contenido = (
+            <>
+              <span
+                className={`mx-[2px] block h-4 rounded-full ${propia ? "" : "trama-ocupado"}`}
                 style={propia ? { background: color } : esAdmin ? { background: color, opacity: 0.85 } : undefined}
               />
               {t.hasta - t.desde >= 2 && (
@@ -116,14 +117,37 @@ export function LineaSala(props: {
                   {etiqueta}
                 </span>
               )}
-            </div>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="text-sm">
-              <span className="font-medium">{etiqueta ?? "Ocupada"}</span>
-              <span className="numeros">
-                {textoHora(minutoDeBloque(t.desde))} a {textoHora(minutoDeBloque(t.hasta))}
-              </span>
-            </TooltipContent>
+            </>
+          );
+
+          if (t.reservaId && new Date(t.inicio) > ahora) {
+            return (
+              <TramoCancelable
+                key={t.inicio}
+                reservaId={t.reservaId}
+                etiqueta={etiqueta}
+                horario={horario}
+                sala={sala.nombre}
+                esAdmin={esAdmin}
+                posicion={posicion}
+                onCancelar={onCancelar}
+              >
+                {contenido}
+              </TramoCancelable>
+            );
+          }
+
+          return (
+            <Tooltip key={t.inicio}>
+              <TooltipTrigger asChild>
+                <div className="absolute top-1/2 z-10 -translate-y-1/2 py-2" style={posicion}>
+                  {contenido}
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-sm">
+                <span className="font-medium">{etiqueta}</span>
+                <span className="numeros">{horario}</span>
+              </TooltipContent>
             </Tooltip>
           );
         })}
@@ -156,7 +180,7 @@ export function LineaSala(props: {
 
         {/* Zonas de clic: un botón por bloque libre de 30 minutos. */}
         {interactiva && (
-          <div className="absolute inset-0 grid" style={{ gridTemplateColumns: `repeat(${BLOQUES}, 1fr)` }}>
+          <div className="pointer-events-none absolute inset-0 grid" style={{ gridTemplateColumns: `repeat(${BLOQUES}, 1fr)` }}>
             {Array.from({ length: BLOQUES }, (_, b) =>
               libre(b) ? (
                 <Button
@@ -165,7 +189,7 @@ export function LineaSala(props: {
                   onClick={() => alHacerClic(b)}
                   aria-label={`${sala.nombre}, ${textoHora(minutoDeBloque(b))} a ${textoHora(minutoDeBloque(b) + BLOQUE)}, libre`}
                   aria-pressed={seleccion ? b >= selDesde && b < selHasta : false}
-                  className="group relative h-full w-auto min-w-0 cursor-pointer rounded-none p-0 hover:bg-transparent focus-visible:z-10 active:not-aria-[haspopup]:translate-y-0"
+                  className="group pointer-events-auto relative h-full w-auto min-w-0 cursor-pointer rounded-none p-0 hover:bg-transparent focus-visible:z-10 aria-expanded:bg-transparent dark:hover:bg-transparent active:not-aria-[haspopup]:translate-y-0"
                 >
                   <span
                     className="absolute inset-x-[1px] top-1/2 h-5 -translate-y-1/2 rounded-sm opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100"
@@ -180,5 +204,82 @@ export function LineaSala(props: {
         )}
       </div>
     </div>
+  );
+}
+
+/** Tramo propio: al tocarlo muestra el horario y la opción de cancelar, con confirmación. */
+function TramoCancelable(props: {
+  reservaId: string;
+  etiqueta: string;
+  horario: string;
+  sala: string;
+  esAdmin: boolean;
+  posicion: { left: string; width: string };
+  onCancelar: (reservaId: string) => Promise<void>;
+  children: React.ReactNode;
+}) {
+  const { reservaId, etiqueta, horario, sala, esAdmin, posicion, onCancelar, children } = props;
+  const [abierto, setAbierto] = useState(false);
+  const [confirmando, setConfirmando] = useState(false);
+  const [enviando, setEnviando] = useState(false);
+
+  return (
+    <Popover
+      open={abierto}
+      onOpenChange={(v) => {
+        setAbierto(v);
+        if (!v) setConfirmando(false);
+      }}
+    >
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          aria-label={`${etiqueta}, ${sala}, ${horario}. Ver opciones`}
+          className="absolute top-1/2 z-10 -translate-y-1/2 cursor-pointer rounded-full py-2 transition-[filter] duration-150 ease-out hover:brightness-110"
+          style={posicion}
+        >
+          {children}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent side="bottom" align="start" className="w-64 p-3">
+        <p className="font-medium text-tinta">{etiqueta}</p>
+        <p className="numeros text-sm text-tinta-2">
+          {sala} · {horario}
+        </p>
+        {confirmando ? (
+          <div className="mt-3 border-t border-borde pt-3">
+            <p className="text-sm text-tinta">
+              {esAdmin ? `¿Cancelar la reserva de ${etiqueta}?` : "¿Cancelar esta reserva?"} La franja queda libre para otros
+            </p>
+            <div className="mt-3 flex gap-2">
+              <Button
+                size="sm"
+                disabled={enviando}
+                className="bg-error font-medium text-banda-tinta hover:bg-error/90"
+                onClick={async () => {
+                  setEnviando(true);
+                  try {
+                    await onCancelar(reservaId);
+                    setAbierto(false);
+                  } finally {
+                    setEnviando(false);
+                    setConfirmando(false);
+                  }
+                }}
+              >
+                {enviando ? "Cancelando…" : "Sí, cancelar"}
+              </Button>
+              <Button size="sm" variant="ghost" disabled={enviando} onClick={() => setConfirmando(false)}>
+                No
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <Button size="sm" variant="outline" className="mt-3 w-full text-error hover:text-error" onClick={() => setConfirmando(true)}>
+            Cancelar reserva
+          </Button>
+        )}
+      </PopoverContent>
+    </Popover>
   );
 }

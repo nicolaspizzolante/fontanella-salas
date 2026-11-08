@@ -117,6 +117,16 @@ export function VistaDisponibilidad() {
     }
   }
 
+  async function cancelar(reservaId: string) {
+    try {
+      const { reserva } = await pedirApi<{ reserva: Reserva }>(actor, `/api/reservas/${reservaId}/cancelar`, { method: "POST" });
+      setAviso({ tipo: "cancelada", reserva });
+    } catch (error) {
+      setAviso({ tipo: "error", mensaje: error instanceof ErrorApi ? error.message : "No pudimos cancelar la reserva." });
+    }
+    await cargar(true);
+  }
+
   return (
     <div>
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
@@ -164,6 +174,8 @@ export function VistaDisponibilidad() {
                           setAviso(null);
                         }}
                         minutoAhora={esHoy ? minutosLocales(ahora) : null}
+                        ahora={ahora}
+                        onCancelar={cancelar}
                       />
                     ))}
                 {datos && datos.salas.length === 0 && (
