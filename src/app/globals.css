@@ -2,14 +2,15 @@
 
 /*
  * Mundo visual: señalética del Subte de Buenos Aires.
- * Banda negra de cartel, fondo claro de oficina y un color de línea por sala
- * que la identifica en todas las vistas. Los colores de estado solo aparecen
- * donde informan algo.
+ * Banda negra de cartel con la navegación adentro, fondo blanco de chapa,
+ * secciones abiertas por una regla negra gruesa (el canto del cartel),
+ * esquinas rectas y un color de línea por sala que la identifica en todas las
+ * vistas. Los colores de estado solo aparecen donde informan algo.
  */
 :root {
-  --suelo: #f3f4f6;
+  --suelo: #ffffff;
   --superficie: #ffffff;
-  --superficie-2: #f8f9fa;
+  --superficie-2: #f4f5f6;
   --tinta: #121417;
   --tinta-2: #474d55;
   --tinta-3: #666c75;
@@ -67,6 +68,13 @@
   --color-aviso-suelo: var(--aviso-suelo);
   --color-foco: var(--foco);
   --font-sans: var(--fuente-archivo), ui-sans-serif, system-ui, sans-serif;
+
+  /* Chapas de cartel: esquinas casi rectas en todos los controles. */
+  --radius-xs: 1px;
+  --radius-sm: 1px;
+  --radius-md: 2px;
+  --radius-lg: 2px;
+  --radius: 2px;
 }
 
 html {
@@ -103,6 +111,20 @@ textarea {
   font-weight: 750;
   letter-spacing: 0.01em;
   text-transform: uppercase;
+}
+
+/* Títulos: Archivo angosta en caja baja, la voz de los nombres de estación. */
+.titulo-cartel {
+  font-stretch: 75%;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  line-height: 1.05;
+  text-wrap: balance;
+}
+
+/* Canto del cartel: regla negra gruesa que abre cada sección. */
+.canto {
+  border-top: 3px solid var(--tinta);
 }
 
 .numeros {

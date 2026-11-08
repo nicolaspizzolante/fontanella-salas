@@ -53,8 +53,8 @@ export function VistaMetricas() {
   if (!esAdmin) {
     return (
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight sm:text-[28px]">Métricas de uso</h1>
-        <p className="mt-1 max-w-[65ch] text-tinta-2">
+        <h1 className="titulo-cartel text-[40px]">Métricas de uso</h1>
+        <p className="mt-3 max-w-[65ch] text-tinta-2">
           Las métricas de uso son solo para la administración del edificio. Desde{" "}
           <Link href="/disponibilidad" className="font-medium text-tinta underline underline-offset-4">
             Disponibilidad
@@ -71,11 +71,12 @@ export function VistaMetricas() {
     <div>
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight sm:text-[28px]">Métricas de uso</h1>
-          <p className="mt-1 text-tinta-2">
-            Cómo se usan las salas y dónde hay oportunidades comerciales.
-            {datos && ` Del ${rangoDeFechas(datos.rango.desde, datos.rango.hasta)}, ${datos.rango.diasHabiles} días hábiles.`}
-          </p>
+          <h1 className="titulo-cartel text-[40px]">Métricas de uso</h1>
+          {datos && (
+            <p className="numeros mt-2 text-tinta-2">
+              Del {rangoDeFechas(datos.rango.desde, datos.rango.hasta)} · {datos.rango.diasHabiles} días hábiles
+            </p>
+          )}
         </div>
         <SelectorRango
           rango={rango}
@@ -99,8 +100,8 @@ export function VistaMetricas() {
         <div className={`transition-opacity duration-200 ${cargando ? "opacity-60" : ""}`} aria-busy={cargando}>
           <Resumen datos={datos} />
 
-          <div className="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-            <div className="grid min-w-0 gap-6">
+          <div className="mt-12 grid items-start gap-x-10 gap-y-12 lg:grid-cols-[minmax(0,1fr)_20rem]">
+            <div className="grid min-w-0 gap-12">
               <MapaCalor datos={datos} />
               <OcupacionPorSala datos={datos} />
               <Tendencia datos={datos} />
@@ -186,10 +187,10 @@ function Seccion({
   className?: string;
 }) {
   return (
-    <section className={`relative min-w-0 rounded-lg border border-borde bg-superficie ${className}`}>
-      <div className="flex flex-wrap items-start justify-between gap-3 px-5 pt-4">
+    <section className={`canto relative min-w-0 ${className}`}>
+      <div className="flex flex-wrap items-start justify-between gap-3 pt-3">
         <div>
-          <h2 className="text-lg font-semibold tracking-tight">{titulo}</h2>
+          <h2 className="titulo-cartel text-2xl">{titulo}</h2>
           {descripcion && <p className="mt-0.5 text-sm text-tinta-2">{descripcion}</p>}
         </div>
         {accion}
@@ -236,7 +237,7 @@ function useGlobo() {
 
 function TablaSimple({ columnas, filas }: { columnas: string[]; filas: ReactNode[][] }) {
   return (
-    <div className="overflow-x-auto px-5 pb-5 pt-3">
+    <div className="overflow-x-auto pt-3">
       <table className="numeros w-full text-[15px]">
         <thead>
           <tr className="border-b border-borde">
@@ -290,11 +291,11 @@ function Resumen({ datos }: { datos: Metricas }) {
     },
   ];
   return (
-    <dl className="mt-6 grid gap-px overflow-hidden rounded-lg border border-borde bg-borde grid-cols-2 xl:grid-cols-4">
-      {cifras.map((c) => (
-        <div key={c.nombre} className="bg-superficie px-4 py-4 sm:px-5">
-          <dt className="text-sm text-tinta-2">{c.nombre}</dt>
-          <dd className="numeros mt-1 text-[26px] font-semibold leading-tight tracking-tight text-tinta">{c.valor}</dd>
+    <dl className="canto mt-8 grid grid-cols-2 gap-y-5 pt-4 xl:grid-cols-4">
+      {cifras.map((c, i) => (
+        <div key={c.nombre} className={`border-borde pr-4 ${i % 2 ? "border-l pl-4" : ""} ${i === 2 ? "xl:border-l xl:pl-4" : ""}`}>
+          <dt className="text-sm font-medium text-tinta-2">{c.nombre}</dt>
+          <dd className="titulo-cartel numeros mt-1 text-[40px] text-tinta">{c.valor}</dd>
           <dd className="mt-0.5 text-sm text-tinta-3">{c.nota}</dd>
         </div>
       ))}
@@ -315,7 +316,7 @@ function MapaCalor({ datos }: { datos: Metricas }) {
   return (
     <Seccion
       titulo="Ocupación por día y hora"
-      descripcion="Promedio de todas las salas en cada franja de una hora."
+      descripcion="Promedio de todas las salas, por franja de una hora."
       accion={<BotonVista comoTabla={comoTabla} onCambiar={() => setComoTabla((v) => !v)} />}
     >
       {comoTabla ? (
@@ -324,7 +325,7 @@ function MapaCalor({ datos }: { datos: Metricas }) {
           filas={horas.map((h) => [etiqueta(h), ...[1, 2, 3, 4, 5].map((d) => porcentaje(celda.get(`${d}-${h}`) ?? 0))])}
         />
       ) : (
-        <div data-globo className="relative px-5 pb-4 pt-4" onMouseLeave={globo.ocultar}>
+        <div data-globo className="relative pt-4" onMouseLeave={globo.ocultar}>
           <div className="overflow-x-auto">
             <div
               className="grid min-w-[560px] gap-[2px]"
@@ -419,8 +420,8 @@ function MarcaValle() {
 function OcupacionPorSala({ datos }: { datos: Metricas }) {
   const { lineaDe } = useApp();
   return (
-    <Seccion titulo="Ocupación por sala" descripcion="Horas reservadas sobre las horas de atención del período.">
-      <div className="px-5 pb-5 pt-2">
+    <Seccion titulo="Ocupación por sala">
+      <div className="pt-1">
         {datos.porSede.map((sede) => (
           <div key={sede.sede.id} className="mt-3">
             <div className="flex items-baseline justify-between border-b border-borde pb-1.5 text-sm">
@@ -474,7 +475,6 @@ function Tendencia({ datos }: { datos: Metricas }) {
   return (
     <Seccion
       titulo="Ocupación semana a semana"
-      descripcion="Cada columna es una semana, de lunes a viernes."
       accion={<BotonVista comoTabla={comoTabla} onCambiar={() => setComoTabla((v) => !v)} />}
     >
       {comoTabla ? (
@@ -483,9 +483,9 @@ function Tendencia({ datos }: { datos: Metricas }) {
           filas={semanas.map((s) => [sinDiaSemana(s.semana), horasTexto(s.horasReservadas), porcentaje(s.ocupacion)])}
         />
       ) : semanas.length === 0 ? (
-        <p className="px-5 pb-5 pt-3 text-tinta-2">El período elegido no tiene días hábiles.</p>
+        <p className="pt-3 text-tinta-2">El período elegido no tiene días hábiles.</p>
       ) : (
-        <div data-globo className="relative px-5 pb-4 pt-5" onMouseLeave={globo.ocultar}>
+        <div data-globo className="relative pt-6" onMouseLeave={globo.ocultar}>
           <div className="grid grid-cols-[2.5rem_minmax(0,1fr)]">
             <div className="relative h-44">
               {marcas.map((m) => (
@@ -624,12 +624,11 @@ function Oportunidades({ datos }: { datos: Metricas }) {
   ];
 
   return (
-    <section className="rounded-lg border border-borde bg-superficie lg:sticky lg:top-6">
-      <h2 className="px-5 pt-4 text-lg font-semibold tracking-tight">Oportunidades comerciales</h2>
-      <p className="px-5 text-sm text-tinta-2">Sugerencias a partir del período elegido.</p>
-      <div className="mt-2 divide-y divide-borde">
+    <section className="canto pt-3 lg:sticky lg:top-6">
+      <h2 className="titulo-cartel text-2xl">Oportunidades comerciales</h2>
+      <div className="mt-1 divide-y divide-borde">
         {grupos.map((g) => (
-          <div key={g.titulo} className="px-5 py-3.5">
+          <div key={g.titulo} className="py-4">
             <h3 className="font-semibold text-tinta">{g.titulo}</h3>
             <p className="text-sm text-tinta-3">{g.sugerencia}</p>
             {g.items.length ? (
@@ -689,10 +688,10 @@ function TablaEmpresas({ datos }: { datos: Metricas }) {
     setOrden((o) => (o.clave === clave ? { clave, descendente: !o.descendente } : { clave, descendente: clave !== "empresa" }));
 
   return (
-    <Seccion titulo="Comportamiento por empresa" descripcion="Tocá un encabezado para ordenar." className="mt-6">
+    <Seccion titulo="Comportamiento por empresa" className="mt-12">
       <div className="mt-3 overflow-x-auto">
         <table className="numeros w-full min-w-[820px] text-[15px]">
-          <thead className="border-y border-borde bg-superficie-2">
+          <thead className="border-b border-borde">
             <tr>
               {(Object.keys(COLUMNAS_EMPRESA) as Orden["clave"][]).map((clave, i) => {
                 const activa = orden.clave === clave;
@@ -700,7 +699,7 @@ function TablaEmpresas({ datos }: { datos: Metricas }) {
                   <th
                     key={clave}
                     aria-sort={activa ? (orden.descendente ? "descending" : "ascending") : "none"}
-                    className={`px-4 py-1.5 ${i === 0 ? "text-left" : "text-right"}`}
+                    className={`px-3 py-1.5 first:pl-0 ${i === 0 ? "text-left" : "text-right"}`}
                   >
                     <button
                       type="button"
@@ -729,20 +728,20 @@ function TablaEmpresas({ datos }: { datos: Metricas }) {
           <tbody className="divide-y divide-borde">
             {filas.map((e) => (
               <tr key={e.empresa.id} className="hover:bg-superficie-2">
-                <td className="px-4 py-2.5 text-left font-medium text-tinta">{e.empresa.nombre}</td>
-                <td className="px-4 py-2.5 text-right text-tinta">{horasTexto(e.horasReservadas)}</td>
-                <td className="px-4 py-2.5 text-right text-tinta-2">{porcentaje(e.participacion)}</td>
-                <td className="px-4 py-2.5 text-right text-tinta-2">{e.reservas}</td>
-                <td className="px-4 py-2.5 text-right text-tinta-2">{porcentaje(e.tasaCancelacion)}</td>
-                <td className="px-4 py-2.5 text-right">
+                <td className="py-2.5 pl-0 pr-3 text-left font-medium text-tinta">{e.empresa.nombre}</td>
+                <td className="px-3 py-2.5 text-right text-tinta">{horasTexto(e.horasReservadas)}</td>
+                <td className="px-3 py-2.5 text-right text-tinta-2">{porcentaje(e.participacion)}</td>
+                <td className="px-3 py-2.5 text-right text-tinta-2">{e.reservas}</td>
+                <td className="px-3 py-2.5 text-right text-tinta-2">{porcentaje(e.tasaCancelacion)}</td>
+                <td className="px-3 py-2.5 text-right">
                   {tardias.has(e.empresa.id) ? (
                     <Etiqueta tono="aviso">{e.cancelacionesTardias}</Etiqueta>
                   ) : (
                     <span className="text-tinta-2">{e.cancelacionesTardias}</span>
                   )}
                 </td>
-                <td className="px-4 py-2.5 text-right text-tinta-2">{e.reservas ? porcentaje(e.usoCapacidad) : "—"}</td>
-                <td className="px-4 py-2.5 text-right">
+                <td className="px-3 py-2.5 text-right text-tinta-2">{e.reservas ? porcentaje(e.usoCapacidad) : "—"}</td>
+                <td className="px-3 py-2.5 text-right">
                   {inactivas.has(e.empresa.id) ? (
                     <Etiqueta tono="aviso">
                       {e.diasDesdeUltimaReserva === null ? "Nunca" : `Hace ${e.diasDesdeUltimaReserva} días`}
@@ -762,7 +761,7 @@ function TablaEmpresas({ datos }: { datos: Metricas }) {
           </tbody>
         </table>
       </div>
-      <p className="px-5 py-3 text-sm text-tinta-3">
+      <p className="pt-3 text-sm text-tinta-3">
         Las cancelaciones hechas por la administración no cuentan contra la empresa. Resaltadas: inactividad de más de 30 días y
         cancelaciones tardías frecuentes.
       </p>
@@ -780,13 +779,13 @@ function Etiqueta({ tono, children }: { tono: "aviso"; children: ReactNode }) {
 function Esqueleto() {
   return (
     <div aria-hidden className="mt-6">
-      <div className="h-[108px] animate-pulse rounded-lg border border-borde bg-superficie" />
-      <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-        <div className="grid gap-6">
-          <div className="h-72 animate-pulse rounded-lg border border-borde bg-superficie" />
-          <div className="h-60 animate-pulse rounded-lg border border-borde bg-superficie" />
+      <div className="canto mt-8 h-[104px] animate-pulse bg-superficie-2" />
+      <div className="mt-12 grid gap-x-10 gap-y-12 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <div className="grid gap-12">
+          <div className="canto h-72 animate-pulse bg-superficie-2" />
+          <div className="canto h-60 animate-pulse bg-superficie-2" />
         </div>
-        <div className="h-[34rem] animate-pulse rounded-lg border border-borde bg-superficie" />
+        <div className="canto h-[34rem] animate-pulse bg-superficie-2" />
       </div>
     </div>
   );

@@ -28,8 +28,8 @@ export function PanelReserva({ fecha, sala, seleccion, esAdmin, cerrado, onDesca
 
   if (esAdmin || cerrado || !sala || !seleccion) {
     return (
-      <aside className="rounded-lg border border-borde bg-superficie p-5 lg:sticky lg:top-6">
-        <h2 className="voz-cartel text-sm text-tinta-3">{esAdmin ? "Vista de administración" : "Cómo reservar"}</h2>
+      <aside className="canto pt-4 lg:sticky lg:top-6">
+        <h2 className="titulo-cartel text-2xl">{esAdmin ? "Vista de administración" : "Reservar una sala"}</h2>
         {esAdmin ? (
           <p className="mt-2 text-[15px] text-tinta-2">
             Ves todas las reservas y de qué empresa es cada una. Las reservas las hacen las empresas clientes; podés
@@ -38,20 +38,12 @@ export function PanelReserva({ fecha, sala, seleccion, esAdmin, cerrado, onDesca
         ) : cerrado ? (
           <p className="mt-2 text-[15px] text-tinta-2">Elegí un día de lunes a viernes para ver franjas libres.</p>
         ) : (
-          <ol className="mt-3 space-y-2.5 text-[15px] text-tinta-2">
-            <li className="flex gap-3">
-              <PasoNumero n={1} /> Hacé clic en la franja libre donde empieza la reunión.
-            </li>
-            <li className="flex gap-3">
-              <PasoNumero n={2} /> Hacé clic en la franja donde termina, en la misma sala.
-            </li>
-            <li className="flex gap-3">
-              <PasoNumero n={3} /> Indicá cuántas personas asisten y confirmá.
-            </li>
-          </ol>
+          <p className="mt-2 text-[15px] text-tinta-2">
+            Sobre la línea de una sala, tocá la hora en que empieza la reunión y después la hora en que termina.
+          </p>
         )}
         {!esAdmin && !cerrado && (
-          <p className="mt-4 border-t border-borde pt-4 text-sm text-tinta-3">
+          <p className="mt-3 text-sm text-tinta-3">
             De lunes a viernes, de 8 a 20 h, en bloques de 30 minutos y hasta 8 horas por reserva.
           </p>
         )}
@@ -83,10 +75,13 @@ export function PanelReserva({ fecha, sala, seleccion, esAdmin, cerrado, onDesca
   }
 
   return (
-    <aside className="rounded-lg border border-borde bg-superficie lg:sticky lg:top-6" aria-label="Nueva reserva">
-      <div className="h-1.5 rounded-t-lg" style={{ background: `var(--linea-${lineaDe(sala.id)})` }} />
-      <form onSubmit={enviar} className="p-5">
-        <h2 className="voz-cartel text-sm text-tinta-3">Nueva reserva</h2>
+    <aside
+      className="pt-4 lg:sticky lg:top-6"
+      style={{ borderTop: `3px solid var(--linea-${lineaDe(sala.id)})` }}
+      aria-label="Nueva reserva"
+    >
+      <form onSubmit={enviar}>
+        <h2 className="titulo-cartel text-2xl">Nueva reserva</h2>
         <div className="mt-3">
           <NombreSala salaId={sala.id} nombre={sala.nombre} />
           <p className="mt-1 text-sm text-tinta-3">
@@ -175,13 +170,5 @@ export function PanelReserva({ fecha, sala, seleccion, esAdmin, cerrado, onDesca
         </div>
       </form>
     </aside>
-  );
-}
-
-function PasoNumero({ n }: { n: number }) {
-  return (
-    <span aria-hidden className="numeros grid h-6 w-6 shrink-0 place-items-center rounded-full bg-banda text-xs font-semibold text-banda-tinta">
-      {n}
-    </span>
   );
 }

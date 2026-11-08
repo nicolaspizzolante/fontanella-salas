@@ -24,12 +24,22 @@ export function InsigniaSala({ salaId, nombre, tamano = 24 }: { salaId: string; 
   );
 }
 
-export function NombreSala({ salaId, nombre, detalle }: { salaId: string; nombre: string; detalle?: string }) {
+export function NombreSala({
+  salaId,
+  nombre,
+  detalle,
+  grande = false,
+}: {
+  salaId: string;
+  nombre: string;
+  detalle?: string;
+  grande?: boolean;
+}) {
   return (
-    <span className="inline-flex items-center gap-2">
-      <InsigniaSala salaId={salaId} nombre={nombre} />
+    <span className={`inline-flex items-center ${grande ? "gap-3" : "gap-2"}`}>
+      <InsigniaSala salaId={salaId} nombre={nombre} tamano={grande ? 32 : 24} />
       <span className="leading-tight">
-        <span className="block font-medium text-tinta">{nombre}</span>
+        <span className={`block text-tinta ${grande ? "titulo-cartel text-[22px]" : "font-medium"}`}>{nombre}</span>
         {detalle && <span className="block text-sm text-tinta-3">{detalle}</span>}
       </span>
     </span>

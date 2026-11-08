@@ -86,14 +86,9 @@ export function VistaReservas() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold tracking-tight sm:text-[28px]">{esAdmin ? "Reservas" : "Mis reservas"}</h1>
-      <p className="mt-1 text-tinta-2">
-        {esAdmin
-          ? "Todas las reservas de las empresas clientes. Podés cancelar cualquiera que todavía no haya empezado."
-          : "Consultá tus reservas y cancelá las que ya no necesites: la sala vuelve a quedar libre en el momento."}
-      </p>
+      <h1 className="titulo-cartel text-[40px]">{esAdmin ? "Reservas" : "Mis reservas"}</h1>
 
-      <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+      <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
         <div role="tablist" aria-label="Estado de las reservas" className="inline-flex rounded-md border border-borde bg-superficie p-1">
           {PESTANAS.map((p) => (
             <button
@@ -141,9 +136,9 @@ export function VistaReservas() {
         </div>
       )}
 
-      <div className="mt-4 overflow-hidden rounded-lg border border-borde bg-superficie">
+      <div className="canto mt-4">
         {error ? (
-          <div className="p-6">
+          <div className="py-6">
             <p role="alert" className="text-error">{error}</p>
             <button type="button" onClick={cargar} className="mt-3 text-sm font-medium underline underline-offset-4">
               Reintentar
@@ -177,11 +172,11 @@ function TablaReservas({
   ahora: number;
   onCancelar: (r: Reserva) => Promise<void>;
 }) {
-  const th = "voz-cartel px-4 py-2.5 text-left text-xs text-tinta-3";
+  const th = "voz-cartel px-3 py-2.5 text-left text-xs text-tinta-3 first:pl-0";
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[720px] text-[15px]">
-        <thead className="border-b border-borde bg-superficie-2">
+        <thead className="border-b border-borde">
           <tr>
             <th className={th}>Día</th>
             <th className={th}>Horario</th>
@@ -225,11 +220,11 @@ function FilaReserva({
   const [enviando, setEnviando] = useState(false);
   const fecha = fechaDe(r.inicio);
   const empezo = new Date(r.inicio).getTime() <= ahora;
-  const td = "px-4 py-3 align-middle";
+  const td = "px-3 py-3 align-middle first:pl-0";
 
   return (
     <tr className={`hover:bg-superficie-2 ${mostrarFecha ? "border-t border-t-borde-fuerte first:border-t-0" : ""}`}>
-      <td className={`${td} whitespace-nowrap font-medium`}>
+      <td className={`${td} titulo-cartel whitespace-nowrap text-lg`}>
         {mostrarFecha ? (fecha === hoy() ? "Hoy" : capitalizar(fechaCorta(fecha))) : ""}
       </td>
       <td className={`${td} numeros whitespace-nowrap`}>{rangoHorario(r.inicio, r.fin)}</td>
@@ -248,7 +243,7 @@ function FilaReserva({
             {r.origenCancelacion === "ADMIN" && " por la administración"}
           </span>
         ) : pestana === "proximas" && empezo ? (
-          <span className="rounded-full bg-aviso-suelo px-2.5 py-1 text-xs font-semibold text-aviso">En curso</span>
+          <span className="rounded-sm bg-aviso-suelo px-2 py-1 text-xs font-semibold text-aviso">En curso</span>
         ) : pestana === "proximas" && !confirmando ? (
           <button
             type="button"

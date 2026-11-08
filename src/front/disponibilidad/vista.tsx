@@ -115,14 +115,7 @@ export function VistaDisponibilidad() {
   return (
     <div>
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight sm:text-[28px]">Disponibilidad</h1>
-          <p className="mt-1 text-tinta-2">
-            {actor?.tipo === "admin"
-              ? "Ocupación de todas las salas y a qué empresa pertenece cada reserva."
-              : "Elegí una franja libre sobre la línea de una sala para reservarla."}
-          </p>
-        </div>
+        <h1 className="titulo-cartel text-[40px]">Disponibilidad</h1>
         <NavegadorFecha fecha={fecha} onCambiar={cambiarFecha} />
       </div>
 
@@ -132,10 +125,10 @@ export function VistaDisponibilidad() {
         </div>
       )}
 
-      <div className="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-        <section aria-label={`Salas el ${fechaLarga(fecha)}`} className="min-w-0 rounded-lg border border-borde bg-superficie">
+      <div className="mt-8 grid items-start gap-x-10 gap-y-8 lg:grid-cols-[minmax(0,1fr)_19rem]">
+        <section aria-label={`Salas el ${fechaLarga(fecha)}`} className="canto min-w-0">
           {errorCarga ? (
-            <div className="p-6">
+            <div className="py-6">
               <p role="alert" className="text-error">{errorCarga}</p>
               <button type="button" onClick={() => cargar()} className="mt-3 text-sm font-medium underline underline-offset-4">
                 Reintentar
@@ -146,7 +139,7 @@ export function VistaDisponibilidad() {
               <div className="min-w-[660px]">
                 <EscalaHoras />
                 {cerrado && (
-                  <p className="border-b border-borde bg-superficie-2 px-4 py-3 text-sm text-tinta-2">
+                  <p className="border-b border-borde bg-superficie-2 px-3 py-3 text-sm text-tinta-2">
                     {capitalizar(fechaLarga(fecha))}: las salas no abren los fines de semana.
                   </p>
                 )}
@@ -243,7 +236,7 @@ export function Flecha({ direccion }: { direccion: "izquierda" | "derecha" }) {
 function EscalaHoras() {
   return (
     <div className="grid border-b border-borde" style={{ gridTemplateColumns: `${ANCHO_ETIQUETA} 1fr` }}>
-      <div className="voz-cartel px-4 py-2.5 text-xs text-tinta-3">Sala</div>
+      <div className="voz-cartel py-2.5 text-xs text-tinta-3">Sala</div>
       <div className="relative ml-3 mr-5 h-9">
         {Array.from({ length: 13 }, (_, i) => (
           <span
@@ -261,16 +254,16 @@ function EscalaHoras() {
 
 function FilaEsqueleto() {
   return (
-    <div className="grid h-[68px] items-center border-b border-borde" style={{ gridTemplateColumns: `${ANCHO_ETIQUETA} 1fr` }}>
-      <div className="mx-4 h-4 w-32 animate-pulse rounded bg-ocupado-suelo" />
-      <div className="ml-3 mr-5 h-[3px] animate-pulse rounded bg-ocupado-suelo" />
+    <div className="grid h-[88px] items-center border-b border-borde" style={{ gridTemplateColumns: `${ANCHO_ETIQUETA} 1fr` }}>
+      <div className="h-4 w-32 animate-pulse rounded bg-ocupado-suelo" />
+      <div className="ml-3 mr-5 h-1 animate-pulse rounded bg-ocupado-suelo" />
     </div>
   );
 }
 
 function Leyenda({ esAdmin }: { esAdmin: boolean }) {
   return (
-    <div className="flex flex-wrap items-center gap-x-5 gap-y-2 px-4 py-3 text-sm text-tinta-2">
+    <div className="flex flex-wrap items-center gap-x-5 gap-y-2 py-3 text-sm text-tinta-2">
       {!esAdmin && (
         <span className="inline-flex items-center gap-2">
           <span className="h-2.5 w-7 rounded-full bg-tinta" /> Tu reserva, en el color de la sala
@@ -281,7 +274,7 @@ function Leyenda({ esAdmin }: { esAdmin: boolean }) {
       </span>
       <span className="inline-flex items-center gap-2">
         <span className="relative h-2.5 w-7">
-          <span className="absolute inset-x-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-tinta opacity-40" />
+          <span className="absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-tinta opacity-40" />
         </span>
         Libre
       </span>

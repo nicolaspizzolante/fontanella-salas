@@ -30,53 +30,58 @@ export const inicioDe = (actor: Actor) => (actor.tipo === "admin" ? "/metricas" 
 
 function Contenido({ children }: { children: ReactNode }) {
   const { actor, listo } = useApp();
-  const ruta = usePathname();
 
   return (
     <div className="flex min-h-screen flex-col">
       <BandaSuperior />
-      {listo && actor && (
-        <nav aria-label="Secciones" className="border-b border-borde bg-superficie">
-          <ul className="mx-auto flex max-w-6xl gap-1 px-4 sm:px-6">
-            {SECCIONES[actor.tipo].map((s) => {
-              const activa = ruta === s.href;
-              return (
-                <li key={s.href}>
-                  <Link
-                    href={s.href}
-                    aria-current={activa ? "page" : undefined}
-                    className={`relative block px-3 py-3 text-[15px] transition-colors duration-150 ${
-                      activa ? "font-semibold text-tinta" : "text-tinta-2 hover:text-tinta"
-                    }`}
-                  >
-                    {s.etiqueta}
-                    {activa && <span className="absolute inset-x-3 -bottom-px h-[3px] rounded-full bg-tinta" />}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
-      )}
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-16 pt-8 sm:px-6 sm:pt-10">
         {!listo ? null : actor ? children : <Entrada />}
       </main>
     </div>
   );
 }
 
+/** Banda negra de cartel: marca, secciones e identidad en una sola franja. */
 function BandaSuperior() {
   const { actor, listo } = useApp();
+  const ruta = usePathname();
   return (
     <header className="bg-banda text-banda-tinta">
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-        <Link href="/" className="voz-cartel flex items-center gap-2.5 text-xl">
-          <span aria-hidden className="grid h-7 w-7 place-items-center rounded-[3px] bg-banda-tinta">
-            <span className="h-3 w-3 rounded-full bg-banda" />
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-8 px-4 sm:px-6">
+        <Link href="/" className="flex h-14 items-center gap-2.5" aria-label="Salas, inicio">
+          <span aria-hidden className="titulo-cartel grid h-7 w-7 place-items-center rounded-full bg-banda-tinta text-[17px] text-banda">
+            S
           </span>
-          Salas
+          <span className="voz-cartel text-xl">Salas</span>
         </Link>
-        {listo && actor && <SelectorIdentidad />}
+        {listo && actor && (
+          <>
+            <nav aria-label="Secciones" className="order-last -mx-3 w-full sm:order-none sm:mx-0 sm:w-auto">
+              <ul className="flex">
+                {SECCIONES[actor.tipo].map((s) => {
+                  const activa = ruta === s.href;
+                  return (
+                    <li key={s.href}>
+                      <Link
+                        href={s.href}
+                        aria-current={activa ? "page" : undefined}
+                        className={`relative flex h-12 items-center px-3 text-[15px] font-medium transition-colors duration-150 sm:h-14 ${
+                          activa ? "text-banda-tinta" : "text-banda-tinta-2 hover:text-banda-tinta"
+                        }`}
+                      >
+                        {s.etiqueta}
+                        {activa && <span className="absolute inset-x-3 bottom-0 h-1 bg-banda-tinta" />}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </nav>
+            <div className="ml-auto">
+              <SelectorIdentidad />
+            </div>
+          </>
+        )}
       </div>
     </header>
   );
@@ -101,7 +106,7 @@ function SelectorIdentidad() {
 
   return (
     <label className="flex items-center gap-2 text-sm">
-      <span className="hidden text-banda-tinta-2 sm:inline">Usando como</span>
+      <span className="hidden text-banda-tinta-2 md:inline">Usando como</span>
       <select
         value={valor}
         onChange={(evento) => {
@@ -143,7 +148,7 @@ function Entrada() {
 
   return (
     <div className="mx-auto max-w-xl py-6 sm:py-12">
-      <h1 className="text-3xl font-semibold tracking-tight">¿Con qué cuenta querés entrar?</h1>
+      <h1 className="titulo-cartel text-[40px]">¿Con qué cuenta querés entrar?</h1>
       <p className="mt-3 max-w-prose text-tinta-2">
         Esta versión no tiene inicio de sesión. Elegí una empresa cliente para reservar salas en su nombre, o la
         administración para ver la actividad de todas las instalaciones.

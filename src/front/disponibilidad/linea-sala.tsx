@@ -66,16 +66,16 @@ export function LineaSala(props: {
 
   return (
     <div className="grid border-b border-borde" style={{ gridTemplateColumns: `${ANCHO_ETIQUETA} 1fr` }}>
-      <div className="flex items-center px-4 py-3">
-        <NombreSala salaId={sala.id} nombre={sala.nombre} detalle={`${sala.sede.nombre} · ${sala.capacidad} personas`} />
+      <div className="flex items-center py-3 pr-3">
+        <NombreSala salaId={sala.id} nombre={sala.nombre} detalle={`${sala.sede.nombre} · ${sala.capacidad} personas`} grande />
       </div>
 
-      <div className="relative ml-3 mr-5 h-[68px]">
+      <div className="relative ml-3 mr-5 h-[88px]">
         {/* Traza: tramo ya transcurrido apagado, el resto en el color de la línea. */}
-        <div className="absolute inset-x-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-ocupado-suelo" />
+        <div className="absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-ocupado-suelo" />
         <div
-          className="absolute top-1/2 h-[3px] -translate-y-1/2 rounded-full"
-          style={{ left: pct(primerBloqueLibre), right: 0, background: color, opacity: 0.45 }}
+          className="absolute top-1/2 h-1 -translate-y-1/2 rounded-full"
+          style={{ left: pct(primerBloqueLibre), right: 0, background: color, opacity: 0.5 }}
         />
 
         {/* Estaciones: una por hora. */}
@@ -85,7 +85,7 @@ export function LineaSala(props: {
             <span
               key={i}
               aria-hidden
-              className="absolute top-1/2 h-[9px] w-[9px] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 bg-superficie"
+              className="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-[2.5px] bg-superficie"
               style={{ left: `${(i / 12) * 100}%`, borderColor: pasada ? "var(--borde-fuerte)" : color }}
             />
           );
@@ -103,12 +103,12 @@ export function LineaSala(props: {
               title={`${etiqueta ?? "Ocupada"} · ${textoHora(minutoDeBloque(t.desde))} a ${textoHora(minutoDeBloque(t.hasta))}`}
             >
               <div
-                className={`mx-[2px] h-3 rounded-full ${propia ? "" : "trama-ocupado"}`}
+                className={`mx-[2px] h-4 rounded-full ${propia ? "" : "trama-ocupado"}`}
                 style={propia ? { background: color } : esAdmin ? { background: color, opacity: 0.85 } : undefined}
               />
               {t.hasta - t.desde >= 2 && (
                 <span
-                  className="absolute left-1 top-[-22px] max-w-full truncate text-xs font-medium"
+                  className="absolute left-1 top-[-24px] max-w-full truncate text-[13px] font-semibold"
                   style={{ color: propia || esAdmin ? colorTexto : "var(--tinta-3)" }}
                 >
                   {etiqueta}
@@ -125,10 +125,10 @@ export function LineaSala(props: {
             style={{ left: pct(selDesde), width: pct(selHasta - selDesde) }}
           >
             <div
-              className="mx-[2px] h-4 rounded-full border-2 border-dashed"
+              className="mx-[2px] h-5 rounded-full border-2 border-dashed"
               style={{ borderColor: color, background: `color-mix(in srgb, ${color} 18%, transparent)` }}
             />
-            <span className="numeros absolute left-1 top-[-22px] whitespace-nowrap text-xs font-semibold" style={{ color: colorTexto }}>
+            <span className="numeros absolute left-1 top-[-26px] whitespace-nowrap text-[13px] font-semibold" style={{ color: colorTexto }}>
               {textoHora(minutoDeBloque(selDesde))} a {textoHora(minutoDeBloque(selHasta))}
               {!seleccion.completa && " · elegí el fin"}
             </span>
@@ -158,7 +158,7 @@ export function LineaSala(props: {
                   className="group relative h-full cursor-pointer focus-visible:z-10"
                 >
                   <span
-                    className="absolute inset-x-[1px] top-1/2 h-4 -translate-y-1/2 rounded-sm opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100"
+                    className="absolute inset-x-[1px] top-1/2 h-5 -translate-y-1/2 rounded-sm opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100"
                     style={{ background: `color-mix(in srgb, ${color} 22%, transparent)` }}
                   />
                 </button>
