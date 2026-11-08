@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ErrorApi, type DetalleError, type Disponibilidad } from "../api";
 import { NombreSala } from "../componentes/insignia-sala";
-import { useApp } from "../contexto";
 import { capitalizar, duracionTexto, fechaLarga, textoHora } from "../formato";
 import type { Seleccion } from "./linea-sala";
 import { BLOQUE, minutoDeBloque } from "./reglas";
@@ -24,7 +23,6 @@ type Props = {
 
 /** Panel lateral (no modal): resume la franja elegida y confirma la reserva. */
 export function PanelReserva({ fecha, sala, seleccion, esAdmin, cerrado, onDescartar, onConfirmar }: Props) {
-  const { lineaDe } = useApp();
   const [asistentes, setAsistentes] = useState(() => (sala ? Math.min(2, sala.capacidad) : 2));
   const [motivo, setMotivo] = useState("");
   const [enviando, setEnviando] = useState(false);
@@ -32,8 +30,8 @@ export function PanelReserva({ fecha, sala, seleccion, esAdmin, cerrado, onDesca
 
   if (esAdmin || cerrado || !sala || !seleccion) {
     return (
-      <aside className="canto pt-4 lg:sticky lg:top-6">
-        <h2 className="titulo-cartel text-2xl">{esAdmin ? "Vista de administración" : "Reservar una sala"}</h2>
+      <aside className="border-t border-borde pt-4 lg:sticky lg:top-6">
+        <h2 className="titulo text-xl">{esAdmin ? "Vista de administración" : "Reservar una sala"}</h2>
         {esAdmin ? (
           <p className="mt-2 text-[15px] text-tinta-2">
             Ves todas las reservas y de qué empresa es cada una. Las reservas las hacen las empresas clientes; podés
@@ -43,12 +41,12 @@ export function PanelReserva({ fecha, sala, seleccion, esAdmin, cerrado, onDesca
           <p className="mt-2 text-[15px] text-tinta-2">Elegí un día de lunes a viernes para ver franjas libres.</p>
         ) : (
           <p className="mt-2 text-[15px] text-tinta-2">
-            Sobre la línea de una sala, tocá la hora en que empieza la reunión y después la hora en que termina.
+            Sobre la línea de una sala, tocá la hora en que empieza la reunión y después la hora en que termina
           </p>
         )}
         {!esAdmin && !cerrado && (
           <p className="mt-3 text-sm text-tinta-3">
-            De lunes a viernes, de 8 a 20 h, en bloques de 30 minutos y hasta 8 horas por reserva.
+            De lunes a viernes, de 8 a 20 h, en bloques de 30 minutos y hasta 8 horas por reserva
           </p>
         )}
       </aside>
@@ -81,11 +79,10 @@ export function PanelReserva({ fecha, sala, seleccion, esAdmin, cerrado, onDesca
   return (
     <aside
       className="pt-4 lg:sticky lg:top-6"
-      style={{ borderTop: `3px solid var(--linea-${lineaDe(sala.id)})` }}
       aria-label="Nueva reserva"
     >
       <form onSubmit={enviar}>
-        <h2 className="titulo-cartel text-2xl">Nueva reserva</h2>
+        <h2 className="titulo text-xl">Nueva reserva</h2>
         <div className="mt-3">
           <NombreSala salaId={sala.id} nombre={sala.nombre} />
           <p className="mt-1 text-sm text-tinta-3">
@@ -104,7 +101,7 @@ export function PanelReserva({ fecha, sala, seleccion, esAdmin, cerrado, onDesca
           <dd className="numeros">{duracionTexto(minutos)}</dd>
         </dl>
         {!seleccion.completa && (
-          <p className="mt-2 text-sm text-tinta-3">Hacé clic en otra franja de la misma sala para extender la reserva.</p>
+          <p className="mt-2 text-sm text-tinta-3">Tocá otra hora de la misma sala para extender la reserva</p>
         )}
 
         <div className="mt-5 grid gap-1.5">
@@ -123,10 +120,10 @@ export function PanelReserva({ fecha, sala, seleccion, esAdmin, cerrado, onDesca
           />
           <span id="ayuda-asistentes" className={`text-sm ${excedeCapacidad ? "text-error" : "text-tinta-3"}`}>
             {excedeCapacidad
-              ? `Esta sala admite hasta ${sala.capacidad} personas.`
+              ? `Esta sala admite hasta ${sala.capacidad} personas`
               : asistentesInvalidos
-                ? "Indicá al menos una persona."
-                : `Máximo ${sala.capacidad}.`}
+                ? "Indicá al menos una persona"
+                : `Máximo ${sala.capacidad}`}
           </span>
         </div>
 

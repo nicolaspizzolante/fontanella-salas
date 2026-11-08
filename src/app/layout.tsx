@@ -1,14 +1,19 @@
 import type { Metadata } from "next";
-import { Archivo } from "next/font/google";
+import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import { Marco } from "@/front/componentes/marco";
 import "./globals.css";
 
-// Archivo, de la fundidora argentina Omnibus-Type. El eje de ancho permite la
-// voz angosta de cartel sin sumar una segunda familia.
-const archivo = Archivo({
+// IBM Plex: una sans de oficio, precisa y tranquila, con su mono hermana para
+// horas, ejes y cifras chicas. Dos pesos de trabajo (400 y 500) y 600 para énfasis.
+const plex = IBM_Plex_Sans({
   subsets: ["latin"],
-  axes: ["wdth"],
-  variable: "--fuente-archivo",
+  weight: ["400", "500", "600"],
+  variable: "--fuente-plex",
+});
+const plexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--fuente-plex-mono",
 });
 
 export const metadata: Metadata = {
@@ -18,7 +23,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="es-AR" className={`${archivo.variable} h-full antialiased`}>
+    // next-themes agrega la clase .dark antes de pintar: evita el aviso de hidratación.
+    <html lang="es-AR" className={`${plex.variable} ${plexMono.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="min-h-full bg-suelo text-tinta">
         <Marco>{children}</Marco>
       </body>

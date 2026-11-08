@@ -100,7 +100,7 @@ export function SelectorRangoFechas({
           }}
         />
         <p className="border-t border-borde px-3 py-2 text-sm text-tinta-3">
-          {borrador?.from ? "Elegí el último día." : "Elegí el primer día del período."}
+          {borrador?.from ? "Elegí el último día" : "Elegí el primer día del período"}
         </p>
       </PopoverContent>
     </Popover>

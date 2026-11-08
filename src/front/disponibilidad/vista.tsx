@@ -120,7 +120,7 @@ export function VistaDisponibilidad() {
   return (
     <div>
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
-        <h1 className="titulo-cartel text-[40px]">Disponibilidad</h1>
+        <h1 className="titulo text-[32px]">Disponibilidad</h1>
         <NavegadorFecha fecha={fecha} onCambiar={cambiarFecha} />
       </div>
 
@@ -131,7 +131,7 @@ export function VistaDisponibilidad() {
       )}
 
       <div className="mt-8 grid items-start gap-x-10 gap-y-8 lg:grid-cols-[minmax(0,1fr)_19rem]">
-        <section aria-label={`Salas el ${fechaLarga(fecha)}`} className="canto min-w-0">
+        <section aria-label={`Salas el ${fechaLarga(fecha)}`} className="border-t border-borde min-w-0">
           {errorCarga ? (
             <Alert variant="destructive" className="my-4 border-transparent bg-error-suelo">
               <AlertDescription className="text-current">{errorCarga}</AlertDescription>
@@ -145,7 +145,7 @@ export function VistaDisponibilidad() {
                 <EscalaHoras />
                 {cerrado && (
                   <p className="border-b border-borde bg-superficie-2 px-3 py-3 text-sm text-tinta-2">
-                    {capitalizar(fechaLarga(fecha))}: las salas no abren los fines de semana.
+                    {capitalizar(fechaLarga(fecha))}: las salas no abren los fines de semana
                   </p>
                 )}
                 {cargando && !datos
@@ -212,12 +212,12 @@ function NavegadorFecha({ fecha, onCambiar }: { fecha: string; onCambiar: (f: st
 function EscalaHoras() {
   return (
     <div className="grid border-b border-borde" style={{ gridTemplateColumns: `${ANCHO_ETIQUETA} 1fr` }}>
-      <div className="voz-cartel py-2.5 text-xs text-tinta-3">Sala</div>
+      <div className="etiqueta py-2.5 text-xs text-tinta-3">Sala</div>
       <div className="relative ml-3 mr-5 h-9">
         {Array.from({ length: 13 }, (_, i) => (
           <span
             key={i}
-            className="numeros absolute top-2.5 -translate-x-1/2 text-xs text-tinta-3"
+            className="numeros absolute top-2.5 -translate-x-1/2 font-mono text-xs text-tinta-3"
             style={{ left: `${(i / 12) * 100}%` }}
           >
             {String(8 + i).padStart(2, "0")}

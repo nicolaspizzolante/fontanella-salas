@@ -94,7 +94,7 @@ export function VistaReservas() {
 
   return (
     <div>
-      <h1 className="titulo-cartel text-[40px]">{esAdmin ? "Reservas" : "Mis reservas"}</h1>
+      <h1 className="titulo text-[32px]">{esAdmin ? "Reservas" : "Mis reservas"}</h1>
 
       <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
         <Tabs
@@ -147,7 +147,7 @@ export function VistaReservas() {
         </Alert>
       )}
 
-      <div className="canto mt-4">
+      <div className="border-t border-borde mt-4">
         {error ? (
           <Alert variant="destructive" className="my-4 border-transparent bg-error-suelo">
             <AlertDescription className="text-current">{error}</AlertDescription>
@@ -183,7 +183,7 @@ function TablaReservas({
   ahora: number;
   onCancelar: (r: Reserva) => Promise<void>;
 }) {
-  const th = "voz-cartel h-10 px-3 text-xs text-tinta-3 first:pl-0";
+  const th = "etiqueta h-10 px-3 text-xs text-tinta-3 first:pl-0";
   return (
     <Table className="min-w-[720px] text-[15px]">
       <TableHeader>
@@ -233,7 +233,7 @@ function FilaReserva({
 
   return (
     <TableRow className={mostrarFecha ? "border-t border-t-borde-fuerte first:border-t-0" : ""}>
-      <TableCell className={`${td} titulo-cartel whitespace-nowrap text-lg`}>
+      <TableCell className={`${td} whitespace-nowrap font-medium`}>
         {mostrarFecha ? (fecha === hoy() ? "Hoy" : capitalizar(fechaCorta(fecha))) : ""}
       </TableCell>
       <TableCell className={`${td} numeros`}>{rangoHorario(r.inicio, r.fin)}</TableCell>
@@ -273,7 +273,7 @@ function FilaReserva({
                 setEnviando(false);
                 setConfirmando(false);
               }}
-              className="bg-error font-semibold text-white hover:bg-error/90"
+              className="bg-error font-medium text-banda-tinta hover:bg-error/90"
             >
               {enviando ? "Cancelando…" : "Sí, cancelar"}
             </Button>
@@ -289,9 +289,9 @@ function FilaReserva({
 
 function Vacio({ pestana, esAdmin }: { pestana: Pestana; esAdmin: boolean }) {
   const textos: Record<Pestana, string> = {
-    proximas: esAdmin ? "No hay reservas próximas." : "No tenés reservas próximas.",
-    pasadas: "No hay reservas en los últimos 60 días.",
-    canceladas: "No hay reservas canceladas en los últimos 60 días.",
+    proximas: esAdmin ? "No hay reservas próximas" : "No tenés reservas próximas",
+    pasadas: "No hay reservas en los últimos 60 días",
+    canceladas: "No hay reservas canceladas en los últimos 60 días",
   };
   return (
     <div className="px-6 py-12 text-center">

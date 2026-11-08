@@ -4,9 +4,17 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { pedirApi, type Actor, type Empresa } from "../api";
-import { ArrowRightIcon } from "lucide-react";
+import { ArrowRightIcon, MonitorIcon, MoonIcon, SunIcon } from "lucide-react";
+import { ThemeProvider, useTheme } from "next-themes";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Select,
   SelectContent,
@@ -23,11 +31,13 @@ import { ProveedorApp, useApp } from "../contexto";
 
 export function Marco({ children }: { children: ReactNode }) {
   return (
-    <ProveedorApp>
-      <TooltipProvider delayDuration={150}>
-        <Contenido>{children}</Contenido>
-      </TooltipProvider>
-    </ProveedorApp>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+      <ProveedorApp>
+        <TooltipProvider delayDuration={150}>
+          <Contenido>{children}</Contenido>
+        </TooltipProvider>
+      </ProveedorApp>
+    </ThemeProvider>
   );
 }
 
@@ -58,51 +68,80 @@ function Contenido({ children }: { children: ReactNode }) {
   );
 }
 
-/** Banda negra de cartel: marca, secciones e identidad en una sola franja. */
+/** Encabezado: marca, secciones, identidad y tema, sobre la superficie de la página. */
 function BandaSuperior() {
   const { actor, listo } = useApp();
   const ruta = usePathname();
   return (
-    <header className="bg-banda text-banda-tinta">
+    <header className="border-b border-borde bg-suelo">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-8 px-4 sm:px-6">
-        <Link href="/" className="flex h-14 items-center gap-2.5" aria-label="Salas, inicio">
-          <span aria-hidden className="titulo-cartel grid h-7 w-7 place-items-center rounded-full bg-banda-tinta text-[17px] text-banda">
+        <Link href="/" className="flex h-14 items-center gap-2" aria-label="Salas, inicio">
+          <span
+            aria-hidden
+            className="grid h-6 w-6 place-items-center rounded-full bg-tinta text-[13px] font-semibold text-suelo"
+          >
             S
           </span>
-          <span className="voz-cartel text-xl">Salas</span>
+          <span className="text-[17px] font-semibold tracking-tight">Salas</span>
         </Link>
         {listo && actor && (
-          <>
-            <nav aria-label="Secciones" className="order-last -mx-3 w-full sm:order-none sm:mx-0 sm:w-auto">
-              <ul className="flex">
-                {SECCIONES[actor.tipo].map((s) => {
-                  const activa = ruta === s.href;
-                  return (
-                    <li key={s.href}>
-                      <Button
-                        asChild
-                        variant="ghost"
-                        className={`relative h-12 rounded-none px-3 text-[15px] hover:bg-banda-2 sm:h-14 ${
-                          activa ? "text-banda-tinta hover:text-banda-tinta" : "text-banda-tinta-2 hover:text-banda-tinta"
-                        }`}
-                      >
-                        <Link href={s.href} aria-current={activa ? "page" : undefined}>
-                          {s.etiqueta}
-                          {activa && <span className="absolute inset-x-3 bottom-0 h-1 bg-banda-tinta" />}
-                        </Link>
-                      </Button>
-                    </li>
-                  );
-                })}
-              </ul>
-            </nav>
-            <div className="ml-auto">
-              <SelectorIdentidad />
-            </div>
-          </>
+          <nav aria-label="Secciones" className="order-last -mx-3 w-full sm:order-none sm:mx-0 sm:w-auto">
+            <ul className="flex gap-1">
+              {SECCIONES[actor.tipo].map((s) => {
+                const activa = ruta === s.href;
+                return (
+                  <li key={s.href}>
+                    <Button
+                      asChild
+                      variant="ghost"
+                      className={`relative h-12 rounded-md px-3 text-[15px] font-normal sm:h-9 ${
+                        activa ? "text-tinta" : "text-tinta-2 hover:text-tinta"
+                      }`}
+                    >
+                      <Link href={s.href} aria-current={activa ? "page" : undefined}>
+                        {s.etiqueta}
+                        {activa && <span className="absolute inset-x-3 -bottom-[11px] h-0.5 rounded-full bg-tinta max-sm:bottom-0" />}
+                      </Link>
+                    </Button>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
         )}
+        <div className="ml-auto flex items-center gap-2">
+          {listo && actor && <SelectorIdentidad />}
+          <SelectorTema />
+        </div>
       </div>
     </header>
+  );
+}
+
+function SelectorTema() {
+  const { theme, setTheme } = useTheme();
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon-lg" aria-label="Tema de la interfaz" className="text-tinta-2">
+          <SunIcon className="dark:hidden" />
+          <MoonIcon className="hidden dark:block" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuRadioGroup value={theme ?? "system"} onValueChange={setTheme}>
+          <DropdownMenuRadioItem value="light">
+            <SunIcon /> Claro
+          </DropdownMenuRadioItem>
+          <DropdownMenuRadioItem value="dark">
+            <MoonIcon /> Oscuro
+          </DropdownMenuRadioItem>
+          <DropdownMenuRadioItem value="system">
+            <MonitorIcon /> Según el sistema
+          </DropdownMenuRadioItem>
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -125,7 +164,7 @@ function SelectorIdentidad() {
 
   return (
     <div className="flex items-center gap-2 text-sm">
-      <span id="etiqueta-identidad" className="hidden text-banda-tinta-2 md:inline">
+      <span id="etiqueta-identidad" className="hidden text-tinta-3 md:inline">
         Usando como
       </span>
       <Select
@@ -141,7 +180,7 @@ function SelectorIdentidad() {
       >
         <SelectTrigger
           aria-labelledby="etiqueta-identidad"
-          className="h-9 w-[13rem] border-banda-2 bg-banda-2 font-medium text-banda-tinta hover:border-banda-tinta-2 data-[size=default]:h-9 [&_svg]:text-banda-tinta-2"
+          className="h-9 w-[13rem] bg-superficie data-[size=default]:h-9"
         >
           <SelectValue />
         </SelectTrigger>
@@ -178,19 +217,19 @@ function Entrada() {
 
   return (
     <div className="mx-auto max-w-xl py-6 sm:py-12">
-      <h1 className="titulo-cartel text-[40px]">¿Con qué cuenta querés entrar?</h1>
+      <h1 className="titulo text-[32px]">¿Con qué cuenta querés entrar?</h1>
       <p className="mt-3 max-w-prose text-tinta-2">
         Esta versión no tiene inicio de sesión. Elegí una empresa cliente para reservar salas en su nombre, o la
         administración para ver la actividad de todas las instalaciones.
       </p>
 
-      <h2 className="voz-cartel mt-8 text-sm text-tinta-3">Empresas clientes</h2>
+      <h2 className="etiqueta mt-8 text-sm text-tinta-3">Empresas clientes</h2>
       {error && (
         <Alert variant="destructive" className="mt-3 border-transparent bg-error-suelo">
           <AlertDescription>No pudimos cargar las empresas. ¿Está levantada la base de datos?</AlertDescription>
         </Alert>
       )}
-      <ul className="canto mt-3 divide-y divide-borde">
+      <ul className="border-t border-borde mt-3 divide-y divide-borde">
         {!empresas && !error &&
           Array.from({ length: 4 }, (_, i) => (
             <li key={i} className="py-2">
@@ -202,7 +241,7 @@ function Entrada() {
             <Button
               variant="ghost"
               onClick={() => entrar({ tipo: "empresa", empresaId: e.id, nombre: e.nombre })}
-              className="h-auto w-full justify-between rounded-none px-2 py-3.5 text-base"
+              className="h-auto w-full justify-between px-2 py-3.5 text-base font-normal"
             >
               {e.nombre}
               <ArrowRightIcon className="text-tinta-3" />
@@ -211,13 +250,13 @@ function Entrada() {
         ))}
       </ul>
 
-      <h2 className="voz-cartel mt-8 text-sm text-tinta-3">Empresa administradora</h2>
+      <h2 className="etiqueta mt-8 text-sm text-tinta-3">Empresa administradora</h2>
       <Button
         onClick={() => entrar({ tipo: "admin" })}
-        className="mt-3 h-auto w-full justify-between px-4 py-3.5 text-base hover:bg-banda-2"
+        className="mt-3 h-auto w-full justify-between px-4 py-3.5 text-base"
       >
         Administración
-        <ArrowRightIcon className="text-banda-tinta-2" />
+        <ArrowRightIcon className="opacity-60" />
       </Button>
     </div>
   );

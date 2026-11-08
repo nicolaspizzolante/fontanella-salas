@@ -2,31 +2,36 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-/* La app es solo clara: las variantes dark: de shadcn solo aplican bajo una clase .dark que no usamos. */
+/* El modo oscuro se activa con la clase .dark en <html> (next-themes). */
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Mundo visual: señalética del Subte de Buenos Aires.
- * Banda negra de cartel con la navegación adentro, fondo blanco de chapa,
- * secciones abiertas por una regla negra gruesa (el canto del cartel),
- * esquinas rectas y un color de línea por sala que la identifica en todas las
- * vistas. Los colores de estado solo aparecen donde informan algo.
+ * Sistema visual (pase de unslop):
+ *  - Neutros grafito, sin tinte: la gente mira estas superficies por horas.
+ *  - El color vive en los momentos: la línea de cada sala y el mapa de calor.
+ *  - IBM Plex Sans para la interfaz, IBM Plex Mono para horas, ejes y cifras chicas.
+ *  - Bordes de 1px, radios por tamaño (controles 8, etiquetas 4).
+ *  - Firma: la insignia redonda con la inicial de la sala en su color de línea.
  */
 :root {
-  --suelo: #ffffff;
-  --superficie: #ffffff;
-  --superficie-2: #f4f5f6;
-  --tinta: #121417;
-  --tinta-2: #474d55;
-  --tinta-3: #666c75;
-  --borde: #d9dce1;
-  --borde-fuerte: #b9bec6;
-  --banda: #0e0f11;
-  --banda-2: #24262a;
-  --banda-tinta: #ffffff;
-  --banda-tinta-2: #b7bcc4;
+  color-scheme: light;
 
-  /* Colores de línea (trazos y rellenos) y su variante legible para texto. */
+  --suelo: #fafafa;
+  --superficie: #ffffff;
+  --superficie-2: #f4f4f5;
+  --tinta: #171717;
+  --tinta-2: #525252;
+  --tinta-3: #6b6b6b;
+  --borde: #e5e5e5;
+  --borde-fuerte: #d4d4d4;
+
+  /* Relleno de acción principal y selección: el texto primario como fondo. */
+  --banda: #171717;
+  --banda-2: #2b2b2b;
+  --banda-tinta: #ffffff;
+  --banda-tinta-2: #a3a3a3;
+
+  /* Colores de línea (trazos y rellenos), su variante legible como texto y el texto sobre la insignia. */
   --linea-a: #12a9d8;
   --linea-a-texto: #087399;
   --linea-c: #1c4fa0;
@@ -37,16 +42,18 @@
   --linea-e-texto: #8c2e8e;
   --linea-h: #c99700;
   --linea-h-texto: #7a5d00;
+  --insignia-tinta: #ffffff;
 
-  --ocupado: #8a9099;
-  --ocupado-suelo: #e6e8eb;
+  --ocupado: #8f8f8f;
+  --ocupado-2: #b0b0b0;
+  --ocupado-suelo: #e8e8e8;
 
-  --error: #b42318;
+  --error: #c4291c;
   --error-suelo: #fdeceb;
-  --exito: #17703a;
-  --exito-suelo: #e7f4ec;
+  --exito: #16703a;
+  --exito-suelo: #e8f4ec;
   --aviso: #7a5200;
-  --aviso-suelo: #fff4d4;
+  --aviso-suelo: #fbf1d8;
   --foco: #1c4fa0;
 
   /* Tokens de shadcn/ui, apuntados a la paleta de arriba. */
@@ -68,6 +75,49 @@
   --border: var(--borde);
   --input: var(--borde-fuerte);
   --ring: var(--foco);
+}
+
+/* Grafito oscuro. Las líneas de sala tienen su propia versión, validada contra esta superficie. */
+.dark {
+  color-scheme: dark;
+
+  --suelo: #141415;
+  --superficie: #19191b;
+  --superficie-2: #232325;
+  --tinta: #ededed;
+  --tinta-2: #a1a1a6;
+  --tinta-3: #8a8a90;
+  --borde: #2a2a2d;
+  --borde-fuerte: #3a3a3e;
+
+  --banda: #ededed;
+  --banda-2: #d4d4d4;
+  --banda-tinta: #141415;
+  --banda-tinta-2: #525252;
+
+  --linea-a: #109cba;
+  --linea-a-texto: #5cc8e0;
+  --linea-c: #6f78f0;
+  --linea-c-texto: #a3a9f7;
+  --linea-d: #2aa86a;
+  --linea-d-texto: #62d39c;
+  --linea-e: #c060b0;
+  --linea-e-texto: #e29ad6;
+  --linea-h: #b88a14;
+  --linea-h-texto: #e6bd4f;
+  --insignia-tinta: #0f0f10;
+
+  --ocupado: #5f5f65;
+  --ocupado-2: #48484d;
+  --ocupado-suelo: #2a2a2d;
+
+  --error: #f0646a;
+  --error-suelo: #2c1617;
+  --exito: #4cc38a;
+  --exito-suelo: #12261b;
+  --aviso: #e6b54a;
+  --aviso-suelo: #2a2210;
+  --foco: #8f96f5;
 }
 
 @theme inline {
@@ -92,6 +142,7 @@
   --color-aviso: var(--aviso);
   --color-aviso-suelo: var(--aviso-suelo);
   --color-foco: var(--foco);
+  --color-linea-c: var(--linea-c);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -111,16 +162,19 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --font-sans: var(--fuente-archivo), ui-sans-serif, system-ui, sans-serif;
 
-  /* Chapas de cartel: esquinas casi rectas en todos los controles. */
-  --radius-xs: 1px;
-  --radius-sm: 1px;
-  --radius-md: 2px;
-  --radius-lg: 2px;
-  --radius: 2px;
-  --radius-xl: 2px;
-  --radius-2xl: 2px;
+  --font-sans: var(--fuente-plex), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--fuente-plex-mono), ui-monospace, monospace;
+
+  --radius-xs: 4px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius: 8px;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @layer base {
@@ -132,16 +186,14 @@
 html {
   background: var(--suelo);
   color: var(--tinta);
-  color-scheme: light;
 }
 
 body {
   font-family: var(--font-sans);
-  font-feature-settings: "tnum" 1;
 }
 
 ::selection {
-  background: #f2c100;
+  background: color-mix(in oklab, var(--linea-c) 28%, transparent);
   color: var(--tinta);
 }
 
@@ -157,26 +209,18 @@ textarea {
   accent-color: var(--foco);
 }
 
-/* Voz de cartel: títulos de señalética en Archivo angosta. */
-.voz-cartel {
-  font-stretch: 72%;
-  font-weight: 750;
-  letter-spacing: 0.01em;
-  text-transform: uppercase;
-}
-
-/* Títulos: Archivo angosta en caja baja, la voz de los nombres de estación. */
-.titulo-cartel {
-  font-stretch: 75%;
-  font-weight: 700;
-  letter-spacing: -0.005em;
-  line-height: 1.05;
+/* Títulos de página y de sección: tamaño y color dan la jerarquía, no el peso. */
+.titulo {
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
   text-wrap: balance;
 }
 
-/* Canto del cartel: regla negra gruesa que abre cada sección. */
-.canto {
-  border-top: 3px solid var(--tinta);
+/* Etiquetas chicas (encabezados de tabla, rótulos): caja normal, sin tracking. */
+.etiqueta {
+  font-weight: 500;
+  letter-spacing: 0;
 }
 
 .numeros {
@@ -194,5 +238,5 @@ textarea {
 
 /* Franja ocupada por otra empresa: trama neutra, distinta del color de línea. */
 .trama-ocupado {
-  background: repeating-linear-gradient(-45deg, var(--ocupado) 0 3px, #a9aeb6 3px 6px);
+  background: repeating-linear-gradient(-45deg, var(--ocupado) 0 3px, var(--ocupado-2) 3px 6px);
 }

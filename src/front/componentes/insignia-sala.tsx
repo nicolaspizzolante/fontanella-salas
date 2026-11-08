@@ -10,13 +10,13 @@ export function InsigniaSala({ salaId, nombre, tamano = 24 }: { salaId: string; 
   return (
     <span
       aria-hidden
-      className="voz-cartel inline-grid shrink-0 place-items-center rounded-full leading-none"
+      className="inline-grid shrink-0 place-items-center rounded-full font-semibold leading-none"
       style={{
         width: tamano,
         height: tamano,
-        fontSize: tamano * 0.56,
+        fontSize: tamano * 0.5,
         background: `var(--linea-${linea})`,
-        color: "#fff",
+        color: "var(--insignia-tinta)",
       }}
     >
       {inicial}
@@ -39,7 +39,7 @@ export function NombreSala({
     <span className={`inline-flex items-center ${grande ? "gap-3" : "gap-2"}`}>
       <InsigniaSala salaId={salaId} nombre={nombre} tamano={grande ? 32 : 24} />
       <span className="leading-tight">
-        <span className={`block text-tinta ${grande ? "titulo-cartel text-[22px]" : "font-medium"}`}>{nombre}</span>
+        <span className={`block text-tinta ${grande ? "titulo text-lg" : "font-medium"}`}>{nombre}</span>
         {detalle && <span className="block text-sm text-tinta-3">{detalle}</span>}
       </span>
     </span>

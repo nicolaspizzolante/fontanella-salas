@@ -62,7 +62,7 @@ export function VistaMetricas() {
   if (!esAdmin) {
     return (
       <div>
-        <h1 className="titulo-cartel text-[40px]">Métricas de uso</h1>
+        <h1 className="titulo text-[32px]">Métricas de uso</h1>
         <p className="mt-3 max-w-[65ch] text-tinta-2">
           Las métricas de uso son solo para la administración del edificio. Desde{" "}
           <Button asChild variant="link" className="h-auto p-0 text-base text-tinta">
@@ -80,7 +80,7 @@ export function VistaMetricas() {
     <div>
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
         <div>
-          <h1 className="titulo-cartel text-[40px]">Métricas de uso</h1>
+          <h1 className="titulo text-[32px]">Métricas de uso</h1>
           {datos && (
             <p className="numeros mt-2 text-tinta-2">
               Del {rangoDeFechas(datos.rango.desde, datos.rango.hasta)} · {datos.rango.diasHabiles} días hábiles
@@ -180,10 +180,10 @@ function Seccion({
   className?: string;
 }) {
   return (
-    <section className={`canto relative min-w-0 ${className}`}>
+    <section className={`border-t border-borde relative min-w-0 ${className}`}>
       <div className="flex flex-wrap items-start justify-between gap-3 pt-3">
         <div>
-          <h2 className="titulo-cartel text-2xl">{titulo}</h2>
+          <h2 className="titulo text-xl">{titulo}</h2>
           {descripcion && <p className="mt-0.5 text-sm text-tinta-2">{descripcion}</p>}
         </div>
         {accion}
@@ -217,7 +217,7 @@ function TablaSimple({ columnas, filas }: { columnas: string[]; filas: ReactNode
       <TableHeader>
         <TableRow className="hover:bg-transparent">
           {columnas.map((c, i) => (
-            <TableHead key={c} className={`voz-cartel h-9 px-0 text-xs text-tinta-3 ${i === 0 ? "text-left" : "text-right"}`}>
+            <TableHead key={c} className={`etiqueta h-9 px-0 text-xs text-tinta-3 ${i === 0 ? "text-left" : "text-right"}`}>
               {c}
             </TableHead>
           ))}
@@ -265,11 +265,11 @@ function Resumen({ datos }: { datos: Metricas }) {
     },
   ];
   return (
-    <dl className="canto mt-8 grid grid-cols-2 gap-y-5 pt-4 xl:grid-cols-4">
+    <dl className="border-t border-borde mt-8 grid grid-cols-2 gap-y-5 pt-4 xl:grid-cols-4">
       {cifras.map((c, i) => (
         <div key={c.nombre} className={`border-borde pr-4 ${i % 2 ? "border-l pl-4" : ""} ${i === 2 ? "xl:border-l xl:pl-4" : ""}`}>
           <dt className="text-sm font-medium text-tinta-2">{c.nombre}</dt>
-          <dd className="titulo-cartel numeros mt-1 text-[40px] text-tinta">{c.valor}</dd>
+          <dd className="titulo numeros mt-1 text-[32px] text-tinta">{c.valor}</dd>
           <dd className="mt-0.5 text-sm text-tinta-3">{c.nota}</dd>
         </div>
       ))}
@@ -289,7 +289,7 @@ function MapaCalor({ datos }: { datos: Metricas }) {
   return (
     <Seccion
       titulo="Ocupación por día y hora"
-      descripcion="Promedio de todas las salas, por franja de una hora."
+      descripcion="Promedio de todas las salas, por franja de una hora"
       accion={<BotonVista comoTabla={comoTabla} onCambiar={() => setComoTabla((v) => !v)} />}
     >
       {comoTabla ? (
@@ -308,7 +308,7 @@ function MapaCalor({ datos }: { datos: Metricas }) {
             >
               <span />
               {horas.map((h) => (
-                <span key={h} className="numeros pb-1 text-xs text-tinta-3">
+                <span key={h} className="numeros pb-1 font-mono text-xs text-tinta-3">
                   {String(h).padStart(2, "0")}
                 </span>
               ))}
@@ -388,7 +388,7 @@ function OcupacionPorSala({ datos }: { datos: Metricas }) {
         {datos.porSede.map((sede) => (
           <div key={sede.sede.id} className="mt-3">
             <div className="flex items-baseline justify-between border-b border-borde pb-1.5 text-sm">
-              <span className="voz-cartel text-xs text-tinta-3">{sede.sede.nombre}</span>
+              <span className="etiqueta text-xs text-tinta-3">{sede.sede.nombre}</span>
               <span className="numeros text-tinta-2">{porcentaje(sede.ocupacion)} en total</span>
             </div>
             <ul className="divide-y divide-borde">
@@ -434,6 +434,19 @@ function Tendencia({ datos }: { datos: Metricas }) {
     return sumarDias(hoy(), -((d + 6) % 7));
   }, []);
 
+  const n = semanas.length;
+  const x = (i: number) => (n === 1 ? 50 : (i / (n - 1)) * 100);
+  const y = (v: number) => 100 - (Math.min(v, maximo) / maximo) * 100;
+  // Las semanas que todavía no pasaron se dibujan punteadas: son horas ya comprometidas.
+  const primeraFutura = semanas.findIndex((s) => s.semana > semanaActual);
+  const ultimaPasada = primeraFutura === -1 ? n - 1 : primeraFutura - 1;
+  const trazo = (desde: number, hasta: number) =>
+    semanas
+      .slice(desde, hasta + 1)
+      .map((s, k) => `${k ? "L" : "M"}${x(desde + k)},${y(s.ocupacion)}`)
+      .join(" ");
+  const cadaCuanto = Math.ceil(n / 8);
+
   return (
     <Seccion
       titulo="Ocupación semana a semana"
@@ -444,8 +457,8 @@ function Tendencia({ datos }: { datos: Metricas }) {
           columnas={["Semana del", "Horas reservadas", "Ocupación"]}
           filas={semanas.map((s) => [sinDiaSemana(s.semana), horasTexto(s.horasReservadas), porcentaje(s.ocupacion)])}
         />
-      ) : semanas.length === 0 ? (
-        <p className="pt-3 text-tinta-2">El período elegido no tiene días hábiles.</p>
+      ) : n === 0 ? (
+        <p className="pt-3 text-tinta-2">El período elegido no tiene días hábiles</p>
       ) : (
         <div className="pt-6">
           <div className="grid grid-cols-[2.5rem_minmax(0,1fr)]">
@@ -453,7 +466,7 @@ function Tendencia({ datos }: { datos: Metricas }) {
               {marcas.map((m) => (
                 <span
                   key={m}
-                  className="numeros absolute right-2 -translate-y-1/2 text-xs text-tinta-3"
+                  className="numeros absolute right-3 -translate-y-1/2 font-mono text-xs text-tinta-3"
                   style={{ bottom: `${(m / maximo) * 100}%` }}
                 >
                   {porcentaje(m)}
@@ -468,46 +481,86 @@ function Tendencia({ datos }: { datos: Metricas }) {
                   style={{ bottom: `${(m / maximo) * 100}%` }}
                 />
               ))}
-              <div className="absolute inset-0 flex items-end gap-[2px]">
-                {semanas.map((s) => (
-                  <Tooltip key={s.semana}>
-                    <TooltipTrigger asChild>
-                      <div className="flex h-full flex-1 items-end justify-center">
-                        <div
-                          className="w-full max-w-7 rounded-t-[4px]"
-                          style={{
-                            height: `${(s.ocupacion / maximo) * 100}%`,
-                            background: s.semana > semanaActual ? "transparent" : "var(--linea-c)",
-                            border: s.semana > semanaActual ? "2px dashed var(--linea-c)" : undefined,
-                            borderBottom: "none",
-                          }}
+              <div className="absolute inset-x-3 inset-y-0">
+                <svg className="absolute inset-0 h-full w-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden>
+                  {ultimaPasada >= 0 && (
+                    <path
+                      d={trazo(0, ultimaPasada)}
+                      fill="none"
+                      stroke="var(--linea-c)"
+                      strokeWidth={2}
+                      strokeLinejoin="round"
+                      strokeLinecap="round"
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  )}
+                  {primeraFutura !== -1 && (
+                    <path
+                      d={trazo(Math.max(ultimaPasada, 0), n - 1)}
+                      fill="none"
+                      stroke="var(--linea-c)"
+                      strokeWidth={2}
+                      strokeDasharray="4 4"
+                      strokeLinecap="round"
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  )}
+                </svg>
+                {semanas.map((s, i) => {
+                  const futura = s.semana > semanaActual;
+                  return (
+                    <Tooltip key={s.semana}>
+                      <TooltipTrigger asChild>
+                        <span
+                          className="absolute grid h-6 w-6 -translate-x-1/2 -translate-y-1/2 place-items-center"
+                          style={{ left: `${x(i)}%`, top: `${y(s.ocupacion)}%` }}
+                        >
+                          <span
+                            className="h-2.5 w-2.5 rounded-full border-2"
+                            style={{ borderColor: "var(--linea-c)", background: futura ? "var(--suelo)" : "var(--linea-c)" }}
+                          />
+                          {i === ultimaPasada && (
+                            <span className="numeros absolute bottom-full mb-0.5 text-sm font-medium text-tinta">
+                              {porcentaje(s.ocupacion)}
+                            </span>
+                          )}
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <Globo
+                          titulo={`Semana del ${sinDiaSemana(s.semana)}`}
+                          detalle={`${porcentaje(s.ocupacion)} · ${horasTexto(s.horasReservadas)}${
+                            futura ? " comprometidas" : s.semana === semanaActual ? " (en curso)" : ""
+                          }`}
                         />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <Globo
-                        titulo={`Semana del ${sinDiaSemana(s.semana)}`}
-                        detalle={`${porcentaje(s.ocupacion)} · ${horasTexto(s.horasReservadas)}${
-                          s.semana > semanaActual ? " comprometidas" : s.semana === semanaActual ? " (en curso)" : ""
-                        }`}
-                      />
-                    </TooltipContent>
-                  </Tooltip>
-                ))}
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                })}
               </div>
             </div>
           </div>
-          <div className="ml-10 mt-1.5 flex gap-[2px]">
-            {semanas.map((s, i) => (
-              <span key={s.semana} className="numeros flex-1 text-center text-xs text-tinta-3">
-                {i % Math.ceil(semanas.length / 8) === 0 ? sinDiaSemana(s.semana) : ""}
-              </span>
-            ))}
+          <div className="relative ml-10 mt-2 h-4">
+            <div className="absolute inset-x-3">
+              {semanas.map((s, i) =>
+                i % cadaCuanto === 0 ? (
+                  <span
+                    key={s.semana}
+                    className="numeros absolute -translate-x-1/2 whitespace-nowrap font-mono text-xs text-tinta-3"
+                    style={{ left: `${x(i)}%` }}
+                  >
+                    {sinDiaSemana(s.semana)}
+                  </span>
+                ) : null,
+              )}
+            </div>
           </div>
-          {semanas.some((s) => s.semana > semanaActual) && (
-            <p className="mt-3 flex items-center gap-2 text-sm text-tinta-2">
-              <span className="h-3 w-4 rounded-t-[3px] border-2 border-b-0 border-dashed border-linea-c" />
-              Semanas futuras: horas ya reservadas
+          {primeraFutura !== -1 && (
+            <p className="mt-4 flex items-center gap-2 text-sm text-tinta-2">
+              <svg width="24" height="4" aria-hidden>
+                <line x1="1" y1="2" x2="23" y2="2" stroke="var(--linea-c)" strokeWidth="2" strokeDasharray="4 4" strokeLinecap="round" />
+              </svg>
+              Semanas que vienen: horas ya reservadas
             </p>
           )}
         </div>
@@ -523,49 +576,49 @@ function Oportunidades({ datos }: { datos: Metricas }) {
   const grupos: { titulo: string; sugerencia: string; items: ReactNode[] }[] = [
     {
       titulo: "Horarios para promocionar",
-      sugerencia: "Las franjas menos ocupadas: candidatas a tarifas reducidas o paquetes.",
+      sugerencia: "Las franjas menos ocupadas, candidatas a tarifas reducidas o paquetes",
       items: o.franjasValle.map((v) => (
         <>
-          {v.etiqueta}: <span className="numeros font-medium text-tinta">{porcentaje(v.ocupacion)}</span> de ocupación.
+          {v.etiqueta}: <span className="numeros font-medium text-tinta">{porcentaje(v.ocupacion)}</span> de ocupación
         </>
       )),
     },
     {
       titulo: "Clientes para fidelizar",
-      sugerencia: "Los que más usan las salas: candidatos a un plan con beneficios.",
+      sugerencia: "Los que más usan las salas, candidatos a un plan con beneficios",
       items: o.clientesTop.map((e) => (
         <>
           <span className="font-medium text-tinta">{e.empresa.nombre}</span>:{" "}
-          <span className="numeros">{horasTexto(e.horasReservadas)}</span>, el {porcentaje(e.participacion)} de las horas reservadas.
+          <span className="numeros">{horasTexto(e.horasReservadas)}</span>, el {porcentaje(e.participacion)} de las horas reservadas
         </>
       )),
     },
     {
       titulo: "Clientes para reactivar",
-      sugerencia: "Sin reservas hace más de 30 días.",
+      sugerencia: "Sin reservas hace más de 30 días",
       items: o.clientesInactivos.map((e) => (
         <>
           <span className="font-medium text-tinta">{e.empresa.nombre}</span>:{" "}
-          {e.diasDesdeUltimaReserva === null ? "todavía no hizo ninguna reserva." : `última reserva hace ${e.diasDesdeUltimaReserva} días.`}
+          {e.diasDesdeUltimaReserva === null ? "todavía no hizo ninguna reserva" : `última reserva hace ${e.diasDesdeUltimaReserva} días`}
         </>
       )),
     },
     {
       titulo: "Cancelaciones tardías para revisar",
-      sugerencia: "Cancelan con menos de 24 h y la franja queda difícil de volver a vender.",
+      sugerencia: "Cancelan con menos de 24 h y la franja queda difícil de volver a vender",
       items: o.clientesConCancelacionesTardias.map((e) => (
         <>
           <span className="font-medium text-tinta">{e.empresa.nombre}</span>:{" "}
           <span className="numeros">
             {e.cancelacionesTardias} de {e.cancelaciones}
           </span>{" "}
-          cancelaciones fueron tardías.
+          cancelaciones fueron tardías
         </>
       )),
     },
     {
       titulo: "Salas subutilizadas",
-      sugerencia: "Poca ocupación o grupos mucho más chicos que la sala.",
+      sugerencia: "Poca ocupación o grupos mucho más chicos que la sala",
       items: o.salasSubutilizadas.map((s) => (
         <>
           <span className="font-medium text-tinta">{s.sala.nombre}</span>:{" "}
@@ -575,15 +628,14 @@ function Oportunidades({ datos }: { datos: Metricas }) {
               ; los grupos usan el <span className="numeros">{porcentaje(s.usoCapacidad)}</span> de su capacidad
             </>
           )}
-          .
         </>
       )),
     },
   ];
 
   return (
-    <section className="canto pt-3 lg:sticky lg:top-6">
-      <h2 className="titulo-cartel text-2xl">Oportunidades comerciales</h2>
+    <section className="border-t border-borde pt-3 lg:sticky lg:top-6">
+      <h2 className="titulo text-xl">Oportunidades comerciales</h2>
       <div className="mt-1 divide-y divide-borde">
         {grupos.map((g) => (
           <div key={g.titulo} className="py-4">
@@ -599,7 +651,7 @@ function Oportunidades({ datos }: { datos: Metricas }) {
                 ))}
               </ul>
             ) : (
-              <p className="mt-2 text-[15px] text-tinta-3">Nada para señalar en este período.</p>
+              <p className="mt-2 text-[15px] text-tinta-3">Nada para señalar en este período</p>
             )}
           </div>
         ))}
@@ -663,7 +715,7 @@ function TablaEmpresas({ datos }: { datos: Metricas }) {
                     variant="ghost"
                     size="sm"
                     onClick={() => ordenarPor(clave)}
-                    className={`voz-cartel -mx-2 gap-1 text-xs ${activa ? "text-tinta" : "text-tinta-3"}`}
+                    className={`etiqueta -mx-2 gap-1 text-xs ${activa ? "text-tinta" : "text-tinta-3"}`}
                   >
                     {COLUMNAS_EMPRESA[clave].etiqueta}
                     <Icono aria-hidden className={activa ? "" : "opacity-0"} />
@@ -723,13 +775,13 @@ function Resaltado({ children }: { children: ReactNode }) {
 function Esqueleto() {
   return (
     <div aria-hidden>
-      <Skeleton className="canto mt-8 h-[104px] rounded-none" />
+      <Skeleton className="border-t border-borde mt-8 h-[104px] rounded-none" />
       <div className="mt-12 grid gap-x-10 gap-y-12 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="grid gap-12">
-          <Skeleton className="canto h-72 rounded-none" />
-          <Skeleton className="canto h-60 rounded-none" />
+          <Skeleton className="border-t border-borde h-72 rounded-none" />
+          <Skeleton className="border-t border-borde h-60 rounded-none" />
         </div>
-        <Skeleton className="canto h-[34rem] rounded-none" />
+        <Skeleton className="border-t border-borde h-[34rem] rounded-none" />
       </div>
     </div>
   );
