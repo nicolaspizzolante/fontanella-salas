@@ -26,3 +26,8 @@ export const esquemaDisponibilidad = z.strictObject({
 });
 
 export const esquemaIdReserva = z.uuid();
+
+export const esquemaMetricas = z.strictObject({
+  desde: fechaLocal.optional(),
+  hasta: fechaLocal.optional(),
+});

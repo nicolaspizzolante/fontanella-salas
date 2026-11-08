@@ -7,6 +7,7 @@ import * as rutaReservas from "@/app/api/reservas/route";
 import * as rutaCancelar from "@/app/api/reservas/[id]/cancelar/route";
 import * as rutaDisponibilidad from "@/app/api/disponibilidad/route";
 import * as rutaSalas from "@/app/api/salas/route";
+import * as rutaMetricas from "@/app/api/metricas/route";
 
 export type Como = { empresaId: string } | "admin" | "anonimo" | Record<string, string>;
 
@@ -50,4 +51,7 @@ export const api = {
     aRespuesta(await rutaDisponibilidad.GET(pedido("GET", `/api/disponibilidad?fecha=${fecha}`, como))),
 
   salas: async (como: Como) => aRespuesta(await rutaSalas.GET(pedido("GET", "/api/salas", como))),
+
+  metricas: async (como: Como, consulta = "") =>
+    aRespuesta(await rutaMetricas.GET(pedido("GET", `/api/metricas${consulta}`, como))),
 };
