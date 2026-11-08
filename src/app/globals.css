@@ -1,26 +1,124 @@
 @import "tailwindcss";
 
+/*
+ * Mundo visual: señalética del Subte de Buenos Aires.
+ * Banda negra de cartel, fondo claro de oficina y un color de línea por sala
+ * que la identifica en todas las vistas. Los colores de estado solo aparecen
+ * donde informan algo.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --suelo: #f3f4f6;
+  --superficie: #ffffff;
+  --superficie-2: #f8f9fa;
+  --tinta: #121417;
+  --tinta-2: #474d55;
+  --tinta-3: #666c75;
+  --borde: #d9dce1;
+  --borde-fuerte: #b9bec6;
+  --banda: #0e0f11;
+  --banda-2: #24262a;
+  --banda-tinta: #ffffff;
+  --banda-tinta-2: #b7bcc4;
+
+  /* Colores de línea (trazos y rellenos) y su variante legible para texto. */
+  --linea-a: #12a9d8;
+  --linea-a-texto: #087399;
+  --linea-c: #1c4fa0;
+  --linea-c-texto: #1c4fa0;
+  --linea-d: #00975f;
+  --linea-d-texto: #007a4d;
+  --linea-e: #8c2e8e;
+  --linea-e-texto: #8c2e8e;
+  --linea-h: #f2c100;
+  --linea-h-texto: #7a5d00;
+
+  --ocupado: #8a9099;
+  --ocupado-suelo: #e6e8eb;
+
+  --error: #b42318;
+  --error-suelo: #fdeceb;
+  --exito: #17703a;
+  --exito-suelo: #e7f4ec;
+  --aviso: #7a5200;
+  --aviso-suelo: #fff4d4;
+  --foco: #1c4fa0;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-suelo: var(--suelo);
+  --color-superficie: var(--superficie);
+  --color-superficie-2: var(--superficie-2);
+  --color-tinta: var(--tinta);
+  --color-tinta-2: var(--tinta-2);
+  --color-tinta-3: var(--tinta-3);
+  --color-borde: var(--borde);
+  --color-borde-fuerte: var(--borde-fuerte);
+  --color-banda: var(--banda);
+  --color-banda-2: var(--banda-2);
+  --color-banda-tinta: var(--banda-tinta);
+  --color-banda-tinta-2: var(--banda-tinta-2);
+  --color-ocupado: var(--ocupado);
+  --color-ocupado-suelo: var(--ocupado-suelo);
+  --color-error: var(--error);
+  --color-error-suelo: var(--error-suelo);
+  --color-exito: var(--exito);
+  --color-exito-suelo: var(--exito-suelo);
+  --color-aviso: var(--aviso);
+  --color-aviso-suelo: var(--aviso-suelo);
+  --color-foco: var(--foco);
+  --font-sans: var(--fuente-archivo), ui-sans-serif, system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  background: var(--suelo);
+  color: var(--tinta);
+  color-scheme: light;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  font-feature-settings: "tnum" 1;
+}
+
+::selection {
+  background: var(--linea-h);
+  color: var(--tinta);
+}
+
+:focus-visible {
+  outline: 2px solid var(--foco);
+  outline-offset: 2px;
+}
+
+input,
+select,
+textarea {
+  caret-color: var(--foco);
+  accent-color: var(--foco);
+}
+
+/* Voz de cartel: títulos de señalética en Archivo angosta. */
+.voz-cartel {
+  font-stretch: 72%;
+  font-weight: 750;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+
+.numeros {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* Franja ocupada por otra empresa: trama neutra, distinta del color de línea. */
+.trama-ocupado {
+  background: repeating-linear-gradient(-45deg, var(--ocupado) 0 3px, #a9aeb6 3px 6px);
 }

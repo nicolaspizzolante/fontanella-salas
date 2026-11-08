@@ -43,3 +43,6 @@ next-env.d.ts
 
 # Cliente de Prisma generado
 /src/generated
+
+# Configuración local del entorno de desarrollo
+/.claude/launch.json
