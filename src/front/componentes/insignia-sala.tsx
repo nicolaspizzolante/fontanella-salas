@@ -16,7 +16,7 @@ export function InsigniaSala({ salaId, nombre, tamano = 24 }: { salaId: string; 
         height: tamano,
         fontSize: tamano * 0.56,
         background: `var(--linea-${linea})`,
-        color: linea === "h" ? "var(--tinta)" : "#fff",
+        color: "#fff",
       }}
     >
       {inicial}

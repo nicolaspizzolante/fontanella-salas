@@ -29,7 +29,7 @@
   --linea-d-texto: #007a4d;
   --linea-e: #8c2e8e;
   --linea-e-texto: #8c2e8e;
-  --linea-h: #f2c100;
+  --linea-h: #c99700;
   --linea-h-texto: #7a5d00;
 
   --ocupado: #8a9099;
@@ -81,7 +81,7 @@ body {
 }
 
 ::selection {
-  background: var(--linea-h);
+  background: #f2c100;
   color: var(--tinta);
 }
 
