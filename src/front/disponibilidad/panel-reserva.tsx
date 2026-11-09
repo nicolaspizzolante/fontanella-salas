@@ -30,7 +30,7 @@ export function PanelReserva({ fecha, sala, seleccion, esAdmin, cerrado, onDesca
 
   if (esAdmin || cerrado || !sala || !seleccion) {
     return (
-      <aside className="border-t border-borde pt-4 lg:sticky lg:top-6">
+      <aside className="border-t border-borde pt-4 lg:sticky lg:top-[calc(var(--alto-banda,0px)+1.5rem)] lg:transition-[top] lg:duration-200 lg:ease-out">
         <h2 className="titulo text-xl">{esAdmin ? "Vista de administración" : "Reservar una sala"}</h2>
         {esAdmin ? (
           <p className="mt-2 text-[15px] text-tinta-2">
@@ -78,7 +78,7 @@ export function PanelReserva({ fecha, sala, seleccion, esAdmin, cerrado, onDesca
 
   return (
     <aside
-      className="pt-4 lg:sticky lg:top-6"
+      className="pt-4 lg:sticky lg:top-[calc(var(--alto-banda,0px)+1.5rem)] lg:transition-[top] lg:duration-200 lg:ease-out"
       aria-label="Nueva reserva"
     >
       <form onSubmit={enviar}>

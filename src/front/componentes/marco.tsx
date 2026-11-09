@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { pedirApi, type Actor, type Empresa } from "../api";
 import { ArrowRightIcon, MonitorIcon, MoonIcon, SunIcon } from "lucide-react";
 import { ThemeProvider, useTheme } from "next-themes";
@@ -69,12 +69,55 @@ function Contenido({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ * El encabezado se esconde al bajar (deja más lugar para la grilla o las tablas)
+ * y vuelve apenas se sube un poco. Arriba de todo siempre está visible.
+ */
+function useOcultarAlBajar() {
+  const [oculta, setOculta] = useState(false);
+  useEffect(() => {
+    let anterior = window.scrollY;
+    let pendiente = false;
+    const revisar = () => {
+      pendiente = false;
+      const y = window.scrollY;
+      const delta = y - anterior;
+      if (y < 64) setOculta(false);
+      else if (delta > 6) setOculta(true);
+      else if (delta < -6) setOculta(false);
+      else return; // movimientos mínimos (inercia del trackpad) no cambian nada
+      anterior = y;
+    };
+    const alScrollear = () => {
+      if (!pendiente) {
+        pendiente = true;
+        requestAnimationFrame(revisar);
+      }
+    };
+    window.addEventListener("scroll", alScrollear, { passive: true });
+    return () => window.removeEventListener("scroll", alScrollear);
+  }, []);
+  return oculta;
+}
+
 /** Encabezado: marca, secciones, identidad y tema, sobre la superficie de la página. */
 function BandaSuperior() {
   const { actor, listo } = useApp();
   const ruta = usePathname();
+  const oculta = useOcultarAlBajar();
+  const ref = useRef<HTMLElement>(null);
+  // Las columnas laterales fijas se ubican debajo del encabezado mientras está visible.
+  useEffect(() => {
+    const alto = oculta ? 0 : (ref.current?.offsetHeight ?? 0);
+    document.documentElement.style.setProperty("--alto-banda", `${alto}px`);
+  }, [oculta]);
   return (
-    <header className="border-b border-borde bg-suelo">
+    <header
+      ref={ref}
+      className={`sticky top-0 z-40 border-b border-borde bg-suelo transition-transform duration-200 ease-out focus-within:translate-y-0 ${
+        oculta ? "-translate-y-full" : ""
+      }`}
+    >
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-8 px-4 sm:px-6">
         <Link href="/" className="flex h-14 items-center gap-2" aria-label="Salas Fontanella, inicio">
           <Marca className="h-6 w-6" fondo="var(--tinta)" letras="var(--suelo)" />

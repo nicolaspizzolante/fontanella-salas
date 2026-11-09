@@ -634,7 +634,7 @@ function Oportunidades({ datos }: { datos: Metricas }) {
   ];
 
   return (
-    <section className="border-t border-borde pt-3 lg:sticky lg:top-6">
+    <section className="border-t border-borde pt-3 lg:sticky lg:top-[calc(var(--alto-banda,0px)+1.5rem)] lg:transition-[top] lg:duration-200 lg:ease-out">
       <h2 className="titulo text-xl">Oportunidades comerciales</h2>
       <div className="mt-1 divide-y divide-borde">
         {grupos.map((g) => (
