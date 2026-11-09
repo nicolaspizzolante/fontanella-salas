@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -67,6 +67,70 @@ export function LineaSala(props: {
     }
   }
 
+  // Arrastre con el mouse: se aprieta en el inicio, se suelta en el fin.
+  // El clic suelto sigue funcionando como antes (un clic para el inicio y otro para el fin).
+  const arrastre = useRef<{ ancla: number; extremo: number; movido: boolean } | null>(null);
+  const ignorarClic = useRef(false);
+  const [arrastrando, setArrastrando] = useState(false);
+  const traza = useRef<HTMLDivElement>(null);
+
+  function alApretar(e: React.PointerEvent, b: number) {
+    if (e.pointerType !== "mouse" || e.button !== 0) return; // en pantallas táctiles queda el doble toque
+    // Si ya hay un inicio elegido en esta sala, este clic es el del fin: lo resuelve onClick.
+    if (seleccion && !seleccion.completa) return;
+    e.preventDefault(); // evita seleccionar texto mientras se arrastra
+    arrastre.current = { ancla: b, extremo: b, movido: false };
+    ignorarClic.current = true;
+    setArrastrando(true);
+    onSeleccionar({ salaId: sala.id, ancla: b, extremo: b, completa: false });
+  }
+
+  function alPasar(b: number) {
+    const a = arrastre.current;
+    if (!a) return;
+    // Se estira hasta donde se pueda en esa dirección: frena antes de una reserva o al llegar a 8 h.
+    const paso = b >= a.ancla ? 1 : -1;
+    let hasta = a.ancla;
+    while (hasta !== b && libre(hasta + paso) && Math.abs(hasta + paso - a.ancla) + 1 <= MAX_BLOQUES) hasta += paso;
+    if (hasta === a.extremo) return;
+    b = hasta;
+    a.extremo = b;
+    a.movido = true;
+    onSeleccionar({ salaId: sala.id, ancla: a.ancla, extremo: b, completa: false });
+  }
+
+  // El bloque bajo el mouse se calcula por posición sobre la línea, así el arrastre
+  // sigue aunque el puntero pase por encima de una reserva o salte varios bloques.
+  const alPasarActual = useRef(alPasar);
+  useEffect(() => {
+    alPasarActual.current = alPasar;
+  });
+
+  useEffect(() => {
+    if (!arrastrando) return;
+    const alMover = (e: PointerEvent) => {
+      const caja = traza.current?.getBoundingClientRect();
+      if (!caja) return;
+      const b = Math.floor(((e.clientX - caja.left) / caja.width) * BLOQUES);
+      alPasarActual.current(Math.min(BLOQUES - 1, Math.max(0, b)));
+    };
+    window.addEventListener("pointermove", alMover);
+    const alSoltar = () => {
+      const a = arrastre.current;
+      arrastre.current = null;
+      setArrastrando(false);
+      // Si se arrastró, el tramo queda listo; si no, el clic marcó solo el inicio.
+      if (a?.movido) onSeleccionar({ salaId: sala.id, ancla: a.ancla, extremo: a.extremo, completa: true });
+    };
+    window.addEventListener("pointerup", alSoltar);
+    window.addEventListener("pointercancel", alSoltar);
+    return () => {
+      window.removeEventListener("pointermove", alMover);
+      window.removeEventListener("pointerup", alSoltar);
+      window.removeEventListener("pointercancel", alSoltar);
+    };
+  }, [arrastrando, onSeleccionar, sala.id]);
+
   const selDesde = seleccion ? Math.min(seleccion.ancla, seleccion.extremo) : 0;
   const selHasta = seleccion ? Math.max(seleccion.ancla, seleccion.extremo) + 1 : 0;
 
@@ -76,7 +140,7 @@ export function LineaSala(props: {
         <NombreSala salaId={sala.id} nombre={sala.nombre} detalle={`${sala.sede.nombre} · ${sala.capacidad} personas`} grande />
       </div>
 
-      <div className="relative ml-3 mr-5 h-[88px]">
+      <div ref={traza} className="relative ml-3 mr-5 h-[88px]">
         {/* Traza: tramo ya transcurrido apagado, el resto en el color de la línea. */}
         <div className="absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-ocupado-suelo" />
         <div
@@ -164,7 +228,7 @@ export function LineaSala(props: {
             />
             <span className="numeros absolute left-1 top-[-26px] whitespace-nowrap text-[13px] font-semibold" style={{ color: colorTexto }}>
               {textoHora(minutoDeBloque(selDesde))} a {textoHora(minutoDeBloque(selHasta))}
-              {!seleccion.completa && " · elegí el fin"}
+              {!seleccion.completa && !arrastrando && " · elegí el fin"}
             </span>
           </div>
         )}
@@ -180,13 +244,21 @@ export function LineaSala(props: {
 
         {/* Zonas de clic: un botón por bloque libre de 30 minutos. */}
         {interactiva && (
-          <div className="pointer-events-none absolute inset-0 grid" style={{ gridTemplateColumns: `repeat(${BLOQUES}, 1fr)` }}>
+          <div className="pointer-events-none absolute inset-0 grid select-none" style={{ gridTemplateColumns: `repeat(${BLOQUES}, 1fr)` }}>
             {Array.from({ length: BLOQUES }, (_, b) =>
               libre(b) ? (
                 <Button
                   key={b}
                   variant="ghost"
-                  onClick={() => alHacerClic(b)}
+                  onPointerDown={(e) => alApretar(e, b)}
+                  onClick={() => {
+                    // El clic que sigue a apretar el mouse ya se resolvió en el arrastre.
+                    if (ignorarClic.current) {
+                      ignorarClic.current = false;
+                      return;
+                    }
+                    alHacerClic(b);
+                  }}
                   aria-label={`${sala.nombre}, ${textoHora(minutoDeBloque(b))} a ${textoHora(minutoDeBloque(b) + BLOQUE)}, libre`}
                   aria-pressed={seleccion ? b >= selDesde && b < selHasta : false}
                   className="group pointer-events-auto relative h-full w-auto min-w-0 cursor-pointer rounded-none p-0 hover:bg-transparent focus-visible:z-10 aria-expanded:bg-transparent dark:hover:bg-transparent active:not-aria-[haspopup]:translate-y-0"

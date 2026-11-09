@@ -66,6 +66,19 @@ export function VistaDisponibilidad() {
     return () => clearInterval(id);
   }, []);
 
+  // Esc descarta la reserva en curso, mientras no se haya confirmado.
+  useEffect(() => {
+    if (!seleccion) return;
+    const alTeclear = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || e.defaultPrevented) return;
+      // Si hay un popover o menú abierto, Esc lo cierra a él primero.
+      if (document.querySelector("[data-radix-popper-content-wrapper]")) return;
+      setSeleccion(null);
+    };
+    document.addEventListener("keydown", alTeclear);
+    return () => document.removeEventListener("keydown", alTeclear);
+  }, [seleccion]);
+
   const cambiarFecha = (nueva: string) => {
     setFecha(nueva);
     setSeleccion(null);
