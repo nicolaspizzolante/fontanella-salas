@@ -198,6 +198,12 @@
   [data-slot="tooltip-trigger"] {
     cursor: pointer;
   }
+
+  /* Mientras se arrastra un horario en la grilla, la mano queda cerrada en toda la página. */
+  html.arrastrando,
+  html.arrastrando * {
+    cursor: grabbing !important;
+  }
 }
 
 html {

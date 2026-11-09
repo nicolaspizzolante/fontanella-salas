@@ -74,6 +74,10 @@ export function VistaDisponibilidad() {
       // Si hay un popover o menú abierto, Esc lo cierra a él primero.
       if (document.querySelector("[data-radix-popper-content-wrapper]")) return;
       setSeleccion(null);
+      // Que el bloque clickeado no quede marcado con el borde de foco.
+      if (document.activeElement instanceof HTMLElement && document.activeElement.closest("[data-linea-sala]")) {
+        document.activeElement.blur();
+      }
     };
     document.addEventListener("keydown", alTeclear);
     return () => document.removeEventListener("keydown", alTeclear);

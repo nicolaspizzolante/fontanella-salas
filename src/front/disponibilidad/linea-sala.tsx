@@ -69,19 +69,24 @@ export function LineaSala(props: {
 
   // Arrastre con el mouse: se aprieta en el inicio, se suelta en el fin.
   // El clic suelto sigue funcionando como antes (un clic para el inicio y otro para el fin).
-  const arrastre = useRef<{ ancla: number; extremo: number; movido: boolean } | null>(null);
+  // desdeInicio: el arrastre arrancó con un inicio ya marcado por un clic anterior.
+  const arrastre = useRef<{ ancla: number; extremo: number; movido: boolean; desdeInicio: boolean; bloque: number } | null>(null);
   const ignorarClic = useRef(false);
   const [arrastrando, setArrastrando] = useState(false);
   const traza = useRef<HTMLDivElement>(null);
 
   function alApretar(e: React.PointerEvent, b: number) {
     if (e.pointerType !== "mouse" || e.button !== 0) return; // en pantallas táctiles queda el doble toque
-    // Si ya hay un inicio elegido en esta sala, este clic es el del fin: lo resuelve onClick.
-    if (seleccion && !seleccion.completa) return;
-    e.preventDefault(); // evita seleccionar texto mientras se arrastra
-    arrastre.current = { ancla: b, extremo: b, movido: false };
+    e.preventDefault(); // evita seleccionar texto y que el bloque quede con foco
     ignorarClic.current = true;
     setArrastrando(true);
+    escucharSoltar();
+    if (seleccion && !seleccion.completa) {
+      // Ya hay un inicio marcado: se puede arrastrar desde ahí, o soltar sin moverse (segundo clic).
+      arrastre.current = { ancla: seleccion.ancla, extremo: seleccion.extremo, movido: false, desdeInicio: true, bloque: b };
+      return;
+    }
+    arrastre.current = { ancla: b, extremo: b, movido: false, desdeInicio: false, bloque: b };
     onSeleccionar({ salaId: sala.id, ancla: b, extremo: b, completa: false });
   }
 
@@ -101,10 +106,36 @@ export function LineaSala(props: {
 
   // El bloque bajo el mouse se calcula por posición sobre la línea, así el arrastre
   // sigue aunque el puntero pase por encima de una reserva o salte varios bloques.
+  function alSoltar() {
+    const a = arrastre.current;
+    arrastre.current = null;
+    setArrastrando(false);
+    if (!a) return;
+    // Si se arrastró, el tramo queda listo. Si no, fue un clic: el primero marca el inicio
+    // (ya hecho al apretar) y el segundo, el fin.
+    if (a.movido) onSeleccionar({ salaId: sala.id, ancla: a.ancla, extremo: a.extremo, completa: true });
+    else if (a.desdeInicio) alHacerClic(a.bloque);
+  }
+
+  // Los listeners de ventana llaman siempre a la versión más reciente de cada función.
   const alPasarActual = useRef(alPasar);
+  const alSoltarActual = useRef(alSoltar);
   useEffect(() => {
     alPasarActual.current = alPasar;
+    alSoltarActual.current = alSoltar;
   });
+
+  // El fin del arrastre se escucha desde el momento de apretar (un clic rápido suelta
+  // antes de que React vuelva a renderizar).
+  function escucharSoltar() {
+    const fin = () => {
+      window.removeEventListener("pointerup", fin);
+      window.removeEventListener("pointercancel", fin);
+      alSoltarActual.current();
+    };
+    window.addEventListener("pointerup", fin);
+    window.addEventListener("pointercancel", fin);
+  }
 
   useEffect(() => {
     if (!arrastrando) return;
@@ -115,21 +146,13 @@ export function LineaSala(props: {
       alPasarActual.current(Math.min(BLOQUES - 1, Math.max(0, b)));
     };
     window.addEventListener("pointermove", alMover);
-    const alSoltar = () => {
-      const a = arrastre.current;
-      arrastre.current = null;
-      setArrastrando(false);
-      // Si se arrastró, el tramo queda listo; si no, el clic marcó solo el inicio.
-      if (a?.movido) onSeleccionar({ salaId: sala.id, ancla: a.ancla, extremo: a.extremo, completa: true });
-    };
-    window.addEventListener("pointerup", alSoltar);
-    window.addEventListener("pointercancel", alSoltar);
+    // Mano cerrada en toda la página mientras dura el arrastre.
+    document.documentElement.classList.add("arrastrando");
     return () => {
       window.removeEventListener("pointermove", alMover);
-      window.removeEventListener("pointerup", alSoltar);
-      window.removeEventListener("pointercancel", alSoltar);
+      document.documentElement.classList.remove("arrastrando");
     };
-  }, [arrastrando, onSeleccionar, sala.id]);
+  }, [arrastrando]);
 
   const selDesde = seleccion ? Math.min(seleccion.ancla, seleccion.extremo) : 0;
   const selHasta = seleccion ? Math.max(seleccion.ancla, seleccion.extremo) + 1 : 0;
@@ -140,7 +163,7 @@ export function LineaSala(props: {
         <NombreSala salaId={sala.id} nombre={sala.nombre} detalle={`${sala.sede.nombre} · ${sala.capacidad} personas`} grande />
       </div>
 
-      <div ref={traza} className="relative ml-3 mr-5 h-[88px]">
+      <div ref={traza} data-linea-sala className="relative ml-3 mr-5 h-[88px]">
         {/* Traza: tramo ya transcurrido apagado, el resto en el color de la línea. */}
         <div className="absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-ocupado-suelo" />
         <div
