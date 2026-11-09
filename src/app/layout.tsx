@@ -17,7 +17,7 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Salas · Reservas de salas de reuniones",
+  title: "Salas Fontanella · Reservas de salas de reuniones",
   description: "Reservá salas de reuniones y consultá su disponibilidad.",
 };
 

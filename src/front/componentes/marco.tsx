@@ -28,6 +28,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ProveedorApp, useApp } from "../contexto";
+import { Marca } from "./marca";
 
 export function Marco({ children }: { children: ReactNode }) {
   return (
@@ -75,14 +76,9 @@ function BandaSuperior() {
   return (
     <header className="border-b border-borde bg-suelo">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-8 px-4 sm:px-6">
-        <Link href="/" className="flex h-14 items-center gap-2" aria-label="Salas, inicio">
-          <span
-            aria-hidden
-            className="grid h-6 w-6 place-items-center rounded-full bg-tinta text-[13px] font-semibold text-suelo"
-          >
-            S
-          </span>
-          <span className="text-[17px] font-semibold tracking-tight">Salas</span>
+        <Link href="/" className="flex h-14 items-center gap-2" aria-label="Salas Fontanella, inicio">
+          <Marca className="h-6 w-6" fondo="var(--tinta)" letras="var(--suelo)" />
+          <span className="text-[17px] font-semibold tracking-tight">Salas Fontanella</span>
         </Link>
         {listo && actor && (
           <nav aria-label="Secciones" className="order-last -mx-3 w-full sm:order-none sm:mx-0 sm:w-auto">
