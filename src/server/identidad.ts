@@ -5,7 +5,7 @@ import { ErrorNoIdentificado, ErrorProhibido, ErrorValidacion } from "./errores"
 /**
  * Quién hace el pedido. Es el ÚNICO lugar donde se resuelve la identidad.
  *
- * v1 (sin autenticación, como permite el challenge): la identidad llega en headers.
+ * v1 (sin autenticación): la identidad llega en headers.
  *   - `x-empresa-id: <uuid>` → actúa como esa empresa cliente.
  *   - `x-rol: admin`         → actúa como la empresa administradora.
  *
