@@ -181,6 +181,23 @@
   * {
     @apply border-border;
   }
+
+  /*
+   * Tailwind 4 ya no pone cursor de mano en los botones. Lo devolvemos a todo lo que
+   * se puede tocar y a lo que muestra un tooltip, para que se note al pasar el mouse.
+   */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [role="tab"],
+  [role="combobox"],
+  [role="option"]:not([aria-disabled="true"]),
+  [role^="menuitem"]:not([aria-disabled="true"]),
+  select,
+  summary,
+  label[for],
+  [data-slot="tooltip-trigger"] {
+    cursor: pointer;
+  }
 }
 
 html {
